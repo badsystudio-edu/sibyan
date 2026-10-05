@@ -59,6 +59,7 @@ const Spp = {
   cell(r, c) {
     const a = 'data-act="sppCell" data-nis="' + esc(r.nis) + '" data-k="' + c.k + '"';
     if (c.status === 'na') return '<span class="mute">—</span>';
+    if (c.status === 'libur') return '<span class="cellbtn libur" title="' + esc(c.libur) + '">' + ic('beach_access', 'sm') + ' Libur</span>';
     if (c.status === 'lunas') return '<span class="cellbtn lunas">' + ic('check_circle', 'sm') + ' Lunas</span>';
     if (c.status === 'tunggak') return '<button class="cellbtn tunggak" ' + a + '>Tunggak</button>';
     if (c.status === 'sekarang') return '<button class="cellbtn sekarang" ' + a + '>Bayar ' + shortRp(c.deficit) + '</button>';
@@ -118,7 +119,7 @@ ACT.sppBulk = async el => {
 };
 ACT.sppWa = () => Lap.tunggakanModal(Spp.kelas, Spp.sel.size ? Spp.sel : null);
 ACT.sppPrint = () => {
-  const d = Spp.data, lbl = { lunas: 'Lunas', tunggak: 'Tunggak', sekarang: 'Belum', belum: '-', sebagian: 'Sebagian', na: '-' };
+  const d = Spp.data, lbl = { lunas: 'Lunas', tunggak: 'Tunggak', sekarang: 'Belum', belum: '-', sebagian: 'Sebagian', libur: 'Libur', na: '-' };
   printHtml('<div class="ptitle">Rekap SPP Mingguan — ' + esc(ymLabel(d.periode)) + ' · ' + esc(d.kelas || 'Semua kelas') + '</div><p class="small">' + esc(App.name()) + ' · dicetak ' + fmtTgl(todayStr()) + '</p><table class="tbl"><thead><tr><th>No</th><th>Nama</th><th>NIS</th>' + [1, 2, 3, 4].map(i => '<th>P' + i + '</th>').join('') + '<th>Tunggakan</th></tr></thead><tbody>' +
     Spp.filtered().map((r, i) => '<tr><td>' + (i + 1) + '</td><td>' + esc(r.nama) + '</td><td>' + esc(r.nis) + '</td>' + r.cells.map(c => '<td>' + lbl[c.status] + '</td>').join('') + '<td>' + (r.tunggakan > 0 ? rp(r.tunggakan) : '-') + '</td></tr>').join('') + '</tbody></table>', 'page');
 };

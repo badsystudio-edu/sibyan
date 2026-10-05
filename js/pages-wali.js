@@ -22,8 +22,9 @@ const Wali = {
   async tagihan() {
     const d = await this.data(); if (!d) { $('#view').innerHTML = this.empty(); return; }
     const r = d.ringkas, s = d.santri, today = todayStr();
-    const upcoming = d.bulanIni.filter(x => x.due >= today && x.status !== 'lunas')[0];
+    const upcoming = d.bulanIni.filter(x => x.due >= today && x.status !== 'lunas' && x.status !== 'libur')[0];
     const lbl = x => {
+      if (x.status === 'libur') return ['belum', 'beach_access', chip('Libur', 'info'), x.libur || 'Bebas bayar'];
       if (x.status === 'lunas') return ['lunas', 'check', chip('Lunas', 'ok'), ''];
       if (x.status === 'tunggak') return ['tunggak', 'priority_high', chip('Terlewat', 'err'), 'Jatuh tempo'];
       if (x.status === 'sebagian') return ['sebagian', 'timelapse', chip('Sebagian', 'warn'), 'Sisa ' + rp(x.deficit)];
@@ -37,7 +38,7 @@ const Wali = {
       '<a class="btn deep block" style="margin-top:12px" data-act="waliWa">' + ic('chat') + ' Konfirmasi / Tanya Bendahara</a></div>' +
       (d.historis.length ? '<div class="card" style="margin-top:12px"><h3>' + ic('history') + 'Rincian tunggakan</h3><div style="margin-top:8px">' + d.historis.slice(-8).map(h => '<div class="bullet"><span>' + esc(ymLabel(h.periode)) + ' <span class="small mute">· ' + h.pekan + ' pekan</span></span><b class="num warn">' + rp(h.jumlah) + '</b></div>').join('') + '</div></div>' : '') +
       '<h2 style="margin:18px 0 8px">' + ic('event_repeat') + 'SPP Rutin Jumat (' + esc(ymLabel(today.slice(0, 7))) + ')</h2>' +
-      d.bulanIni.map(x => { const l = lbl(x); return '<div class="wk ' + l[0] + '"><span class="dot">' + ic(l[1]) + '</span><div class="grow"><b>Pekan ' + x.k + '</b> ' + l[2] + '<div class="small mute">Jumat, ' + fmtTgl(x.due) + '</div></div><div class="right"><b class="num ' + (l[0] === 'tunggak' ? 'err' : '') + '">' + rp(x.tarif) + '</b><div class="small mute">' + esc(l[3]) + '</div></div></div>'; }).join('') +
+      d.bulanIni.map(x => { const l = lbl(x); return '<div class="wk ' + l[0] + '"><span class="dot">' + ic(l[1]) + '</span><div class="grow"><b>Pekan ' + x.k + '</b> ' + l[2] + '<div class="small mute">Jumat, ' + fmtTgl(x.due) + '</div></div><div class="right"><b class="num ' + (l[0] === 'tunggak' ? 'err' : '') + '">' + (x.status === 'libur' ? '—' : rp(x.tarif)) + '</b><div class="small mute">' + esc(l[3]) + '</div></div></div>'; }).join('') +
       '<h2 style="margin:18px 0 8px">' + ic('volunteer_activism') + 'Iuran Program & Tahunan</h2>' +
       (d.iuran.length ? d.iuran.map(i => { const p = i.target > 0 ? Math.min(100, Math.round(i.dibayar / i.target * 100)) : (i.dibayar > 0 ? 100 : 0); return '<div class="card tight" style="margin-bottom:10px"><div class="row between">' + chip(i.status === 'lunas' ? 'Lunas' : (i.status === 'sebagian' ? 'Sebagian' : 'Belum dibayar'), i.status === 'lunas' ? 'ok' : (i.status === 'sebagian' ? 'warn' : 'gray')) + '<b class="num">' + rp(i.target) + '</b></div><h3 style="margin:6px 0 2px">' + esc(i.nama) + '</h3><p class="small mute">' + esc(i.deskripsi || '') + '</p><div class="bar" style="margin:8px 0"><i style="width:' + p + '%"></i></div><div class="row between small"><span class="mute">Dibayar ' + rp(i.dibayar) + '</span><b class="num ' + (i.target > i.dibayar ? 'warn' : 'ok') + '">' + (i.target > i.dibayar ? 'Sisa ' + rp(i.target - i.dibayar) : 'Tuntas') + '</b></div></div>'; }).join('') : '<div class="card tight small mute">Belum ada iuran program.</div>') +
       '<div class="note" style="margin-top:16px;flex-direction:column"><div class="row" style="gap:.5rem"><span class="avatar" style="background:var(--deep);color:#fff">' + ic('account_balance') + '</span><b>SOP Kasir Jumat & Validasi</b></div><p class="small">' + esc((App.cfg.settings.infoPembayaran || 'Pembayaran dilayani setiap hari Jumat di kantor Musholla.')) + '</p></div></div>';

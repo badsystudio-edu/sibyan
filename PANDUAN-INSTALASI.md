@@ -83,6 +83,22 @@ Lupa password admin? Ubah `PASSWORD_BARU` di dalam fungsi `resetPasswordAdmin`, 
    - [ ] Ekspor Excel/PDF sama dengan tabel di layar; nota tercetak benar; QR kartu santri terbaca.
    - [ ] Nyaman di HP dan laptop; uji ringan simulasi hari Jumat.
 
+## Fitur: Tambah Kelas & Libur / Bebas Bayar (Super Admin)
+
+**Tambah kelas** — dua cara:
+- Menu **Pengaturan → Master Kelas → Tambah**; atau
+- Langsung dari form santri: tautan **+ Kelas baru** di samping pilihan kelas.
+Kelas baru otomatis memakai tarif "Semua kelas"; atur tarif khusus di **Pengaturan → Tarif SPP**.
+
+**Libur & bebas bayar** — menu **Pengaturan → Libur & Bebas Bayar → Tambah Libur**:
+- Isi *Keterangan* (mis. "Libur Ramadhan & Idul Fitri"), pilih *semua kelas* atau satu kelas, lalu tanggal *Mulai* dan *Sampai*.
+- Pintasan **satu bulan penuh**: pilih bulannya, tanggal terisi otomatis. Untuk rentang lintas bulan (mis. 1 Ramadhan s.d. Idul Fitri) isi tanggalnya langsung.
+- Libur satu hari: isi Mulai = Sampai.
+- **Hanya hari Jumat dalam rentang** yang dibebaskan. Tagihan, tunggakan, dasbor, dan portal wali dihitung ulang otomatis; di tabel SPP muncul label **Libur**; "Tandai Lunas Sekaligus" melewati santri pada pekan libur.
+- Menghapus libur mengembalikan tagihan seperti semula. Pembayaran yang sudah masuk pada pekan yang kemudian dibebaskan tidak hilang, dihitung sebagai kredit untuk tunggakan terlama.
+
+**Memperbarui dari versi sebelumnya:** tempel `Kode.gs` yang baru → **Deploy → Manage deployments → ✏ Edit → New version → Deploy**. Sheet `Libur` dibuat otomatis, data lama tidak berubah. Untuk frontend, ganti berkas lalu `git add .` → `git commit -m "Fitur libur"` → `git push` (pertahankan `js/config.js` Anda yang sudah berisi GAS_URL).
+
 ## Cara kerja hitungan tagihan (asumsi PRD yang diterapkan)
 - Satu bulan = **4 angsuran**; angsuran ke-*k* jatuh tempo pada **Jumat ke-*k*** bulan itu.
 - Tagihan dihitung **sejak bulan masuk** santri sampai bulan berjalan; angsuran dianggap menunggak mulai **sehari setelah** hari Jumat jatuh tempo.

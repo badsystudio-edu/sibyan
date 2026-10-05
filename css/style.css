@@ -144,6 +144,7 @@ table.tbl{width:100%;border-collapse:collapse;min-width:640px}
 /* ---------- Kartu SPP / sel ---------- */
 .cellbtn{border:0;border-radius:9999px;padding:4px 12px;font:600 12px/18px var(--fb);background:var(--subtle);color:#64748b}
 .cellbtn.lunas{background:#d1fae5;color:var(--p900);cursor:default}.cellbtn.tunggak{background:#fee2e2;color:var(--err)}
+.cellbtn.libur{background:#e0e7ff;color:#4338ca;cursor:default}
 .cellbtn.sekarang{background:var(--amber);color:#fff}.cellbtn.sebagian{background:var(--warn-bg);color:var(--amber-d)}
 .cellbtn.belum:hover,.cellbtn.tunggak:hover,.cellbtn.sekarang:hover,.cellbtn.sebagian:hover{filter:brightness(.95)}
 .selbar{display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;justify-content:space-between;background:var(--info-bg);border-radius:1.25rem;padding:.75rem 1rem}
