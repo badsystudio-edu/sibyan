@@ -52,7 +52,7 @@ const Spp = {
       '<div class="card"><div class="row between wrap"><h2>' + ic('list_alt') + 'Daftar Setoran Pekanan</h2>' + chip('Pekan ' + k + ': ' + fmtTgl(fd), 'ok') + '</div><p class="small mute" style="margin-bottom:10px">' + esc(ymLabel(d.periode)) + ' · ' + esc(d.kelas || 'Semua kelas') + ' (' + tot + ' santri)</p>' +
       (tot ? '<div class="tw"><table class="tbl"><thead><tr><th style="width:36px"></th><th>Santri & NIS</th>' + [1, 2, 3, 4].map(i => '<th class="c ' + (i === k ? 'now' : '') + '">Pekan ' + i + '<br><span style="text-transform:none;font-weight:400">' + fmtTgl(d.fridays[i - 1]).slice(0, -5) + '</span></th>').join('') + '<th class="r">Tunggakan</th><th class="c">Aksi</th></tr></thead><tbody>' +
         pg.map(r => '<tr class="' + (r.pekanTunggak > 0 ? 'tung' : '') + '"><td><input type="checkbox" class="ck" data-ch="sppSel" data-nis="' + esc(r.nis) + '" ' + (this.sel.has(r.nis) ? 'checked' : '') + '></td><td><div class="row" style="gap:.6rem">' + avatar(r.nama, r.nis, r.adaFoto) + '<div><b>' + esc(r.nama) + '</b><div class="small mute num">NIS ' + esc(r.nis) + '</div></div></div></td>' +
-          r.cells.map(c => '<td class="c ' + (c.k === k ? 'now' : '') + '">' + this.cell(r, c) + '</td>').join('') + '<td class="r">' + (r.tunggakan > 0 ? '<b class="num err">' + rp(r.tunggakan) + '</b><div class="small mute">' + r.pekanTunggak + ' pekan</div>' : '<span class="ok b">Lunas</span>') + '</td>' +
+          r.cells.map(c => '<td class="c ' + (c.k === k ? 'now' : '') + '">' + this.cell(r, c) + '</td>').join('') + '<td class="r">' + (r.tunggakan > 0 ? '<b class="num err">' + rp(r.tunggakan) + '</b><div class="small mute">' + r.pekanTunggak + ' pekan</div>' : '<span class="ok b">Lunas</span>' + (r.muka > 0 ? '<div class="small" style="color:#0f766e">s.d. ' + esc(r.lunasSampai) + '</div>' : '')) + '</td>' +
           '<td class="c"><button class="btn soft sm" data-act="sppPay" data-nis="' + esc(r.nis) + '">' + ic('payments', 'sm') + ' Bayar</button></td></tr>').join('') + '</tbody></table></div>' + pager(this.page, tot, this.size, 'sppPage') : emptyBox('groups', 'Tidak ada santri aktif pada filter ini.')) + '</div></div>';
     this.updSel(); Foto.hydrate($('#view'));
   },
@@ -60,6 +60,7 @@ const Spp = {
     const a = 'data-act="sppCell" data-nis="' + esc(r.nis) + '" data-k="' + c.k + '"';
     if (c.status === 'na') return '<span class="mute">—</span>';
     if (c.status === 'libur') return '<span class="cellbtn libur" title="' + esc(c.libur) + '">' + ic('beach_access', 'sm') + ' Libur</span>';
+    if (c.status === 'lunas' && c.muka) return '<span class="cellbtn muka" title="Dibayar di muka">' + ic('check_circle', 'sm') + ' Di muka</span>';
     if (c.status === 'lunas') return '<span class="cellbtn lunas">' + ic('check_circle', 'sm') + ' Lunas</span>';
     if (c.status === 'tunggak') return '<button class="cellbtn tunggak" ' + a + '>Tunggak</button>';
     if (c.status === 'sekarang') return '<button class="cellbtn sekarang" ' + a + '>Bayar ' + shortRp(c.deficit) + '</button>';
@@ -78,10 +79,10 @@ const Spp = {
     let sel = '0|'; if (preset) sel = preset.periode + '|' + preset.k; else if (opts.length && !(r.tunggakan > 0)) sel = opts[0].periode + '|' + opts[0].k;
     const first = sel === '0|' ? null : opts.find(o => o.periode + '|' + o.k === sel);
     const m = Modal.open(mHead('Catat Pembayaran SPP', s.nama + ' · NIS ' + s.nis + ' · ' + s.kelas) +
-      '<div class="selbar" style="margin-bottom:12px"><span>Total tunggakan</span><b class="num ' + (r.tunggakan > 0 ? 'err' : 'ok') + '">' + rp(r.tunggakan) + '</b></div>' +
+      '<div class="selbar" style="margin-bottom:12px"><span>Total tunggakan</span><b class="num ' + (r.tunggakan > 0 ? 'err' : 'ok') + '">' + rp(r.tunggakan) + '</b></div>' + (d.muka && d.muka.label ? '<p class="small" style="margin:-4px 0 12px">Saat ini lunas sampai <b>' + esc(d.muka.label) + '</b>' + (d.muka.pekan ? ' (' + d.muka.pekan + ' pekan di muka)' : '') + '</p>' : '') +
       '<form data-form="sppPay"><input type="hidden" name="nis" value="' + esc(s.nis) + '"><div class="fg"><label class="f">Untuk pembayaran</label><select class="inp" name="slot" data-ch="sppSlot"><option value="0|" data-def="' + (r.tunggakan > 0 ? r.tunggakan : (opts[0] ? opts[0].deficit : 25000)) + '">Bayar bebas (dialokasikan ke tunggakan terlama)</option>' +
       opts.map(o => '<option value="' + o.periode + '|' + o.k + '" data-def="' + o.deficit + '" ' + (o.periode + '|' + o.k === sel ? 'selected' : '') + '>Pekan ' + o.k + ' ' + ymLabel(o.periode) + ' — ' + rp(o.deficit) + '</option>').join('') + '</select></div>' +
-      '<div class="fg"><label class="f">Nominal (Rp)</label><input class="inp num" name="nominal" type="number" inputmode="numeric" min="1000" step="500" required value="' + (first ? first.deficit : (r.tunggakan > 0 ? r.tunggakan : (opts[0] ? opts[0].deficit : 25000))) + '"></div>' + payFields('Tunai') +
+      '<div class="fg"><label class="f">Nominal (Rp)</label><input class="inp num" name="nominal" type="number" inputmode="numeric" min="1000" step="500" required value="' + (first ? first.deficit : (r.tunggakan > 0 ? r.tunggakan : (opts[0] ? opts[0].deficit : 25000))) + '"><p class="hint">Bila nominal melebihi tunggakan, kelebihannya <b>otomatis masuk ke pekan-pekan berikutnya</b> (dibayar di muka) dan tercentang di Matriks.</p></div>' + payFields('Tunai') +
       '<div class="mf"><button type="button" class="btn ghost" data-act="close">Batal</button><button class="btn deep" type="submit">' + ic('check') + ' Simpan & Cetak Nota</button></div></form>', 'narrow');
   }
 };

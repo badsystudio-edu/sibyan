@@ -127,6 +127,19 @@ Tabel seluruh santri × tiap pekan (maks. 6 bulan): ✓ lunas, ✗ menunggak, �
 ### Keamanan tambahan
 Teks isian yang berawalan `=`, `+`, `-`, `@` kini tidak lagi dieksekusi sebagai rumus Google Sheets.
 
+## Fitur v3.2: Pembayaran di muka (kelebihan bayar masuk ke pekan berikutnya)
+
+Bila santri membayar **lebih** dari yang jatuh tempo, kelebihannya otomatis mengisi pekan-pekan berikutnya, bulan demi bulan, sampai nominalnya habis — dan **tercentang** di matriks.
+- **Urutan alokasi:** tunggakan terlama lebih dulu, lalu pekan berjalan, lalu pekan-pekan ke depan. Pekan yang bertepatan dengan **libur/bebas bayar dilewati** (tidak memakan kredit).
+- **Cara mencatat:** cukup pakai **Bayar** di halaman SPP dengan pilihan *Bayar bebas* dan isi nominal total (mis. Rp 175.000 = 7 pekan × Rp 25.000). Boleh juga membayar pekan tertentu dengan nominal lebih besar; sisanya mengalir ke depan.
+- **Memantau sampai kapan dibayar:**
+  - **Matriks Centang** otomatis memanjang ke bulan-bulan yang sudah dibayar di muka (maks. 3 bulan ke depan). Centang biru-hijau (✓) = dibayar di muka; ◐ = pekan terakhir yang baru terbayar sebagian. Kolom **Lunas s.d.** menunjukkan pekan terakhir yang lunas, mis. *Pekan 3 November 2026 (+4 pekan di muka)*.
+  - Halaman **SPP Mingguan**: pilih bulan depan untuk melihat sel **Di muka**; kolom Tunggakan menampilkan *s.d. …* bagi santri yang lunas. Anda juga bisa memakai **Tandai Lunas Sekaligus** untuk pekan di bulan depan.
+  - **Nota** dan **WhatsApp pembayaran** memuat baris *Lunas sampai: …* (variabel baru `{lunas_sampai}`).
+  - **Portal wali** menampilkan banner *Dibayar di muka sampai …*; **Buku SPP PDF** memuat bulan-bulan yang sudah dibayar di muka (ditandai "(muka)").
+- Pembayaran di muka **tidak dihitung sebagai tunggakan** dan tidak mengubah laporan kas (pemasukan tetap dicatat pada tanggal bayar).
+- Bila tarif berubah, pekan di muka yang sudah terlanjur terhitung ikut dihitung ulang memakai tarif yang berlaku pada bulan tersebut (kredit tetap Rp yang sama).
+
 ## Fitur v3.1: Aktivitas Wali, ajakan memasang aplikasi, pembaruan otomatis, diagnosa
 
 ### Aktivitas Wali (menu **Aktivitas Wali**)
@@ -138,7 +151,7 @@ Memantau siapa yang sudah login dan membuka tagihan/kuitansi anaknya. Tabel per 
 Setelah wali login dan belum memasang aplikasi, muncul popup **"Pasang SIBYAN di HP Anda"** (sekali per sesi) dengan tombol **Pasang Sekarang** (Android/Chrome langsung memunculkan dialog pasang; iPhone/lainnya menampilkan langkah manual), **Nanti saja** (muncul lagi 7 hari kemudian) dan **Jangan tampilkan lagi**. Tidak muncul bila aplikasi sudah dipasang.
 
 ### Pembaruan otomatis & pemeriksa versi
-- Semua berkas diberi nomor versi (`?v=3.1.0`) dan service worker selalu memeriksa pembaruan ke server, sehingga versi baru tidak lagi tertahan di cache. Bila ada versi baru, muncul banner **"Muat ulang sekarang"**.
+- Semua berkas diberi nomor versi (`?v=3.2.0`) dan service worker selalu memeriksa pembaruan ke server, sehingga versi baru tidak lagi tertahan di cache. Bila ada versi baru, muncul banner **"Muat ulang sekarang"**.
 - Bila server Apps Script masih versi lama, admin melihat banner kuning beserta caranya memperbarui. Versi tampil di sidebar (Aplikasi vX · Server vY).
 - **`cek.html`** (buka `alamat-situs/cek.html`) adalah pemeriksa mandiri: mengecek setiap berkas di GitHub Pages, versi `index.html`, versi server Apps Script, dan isi cache peramban — lalu menuliskan masalahnya dalam bahasa sederhana. Tombol **Bersihkan cache & muat ulang** tersedia di sana. Halaman ini tetap berfungsi walau aplikasi utama masih versi lama, jadi **unggah `cek.html` lebih dulu** bila menu baru tidak muncul.
 

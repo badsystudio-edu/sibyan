@@ -25,7 +25,7 @@ const Wali = {
     const upcoming = d.bulanIni.filter(x => x.due >= today && x.status !== 'lunas' && x.status !== 'libur')[0];
     const lbl = x => {
       if (x.status === 'libur') return ['belum', 'beach_access', chip('Libur', 'info'), x.libur || 'Bebas bayar'];
-      if (x.status === 'lunas') return ['lunas', 'check', chip('Lunas', 'ok'), ''];
+      if (x.status === 'lunas') return ['lunas', 'check', chip(x.due > today ? 'Lunas (di muka)' : 'Lunas', 'ok'), x.due > today ? 'Dibayar di muka' : ''];
       if (x.status === 'tunggak') return ['tunggak', 'priority_high', chip('Terlewat', 'err'), 'Jatuh tempo'];
       if (x.status === 'sebagian') return ['sebagian', 'timelapse', chip('Sebagian', 'warn'), 'Sisa ' + rp(x.deficit)];
       if (upcoming && x.k === upcoming.k) return ['sekarang', 'schedule', chip('Pekan ini', 'warn'), 'Siap setor'];
@@ -36,6 +36,7 @@ const Wali = {
       '<div class="small mute" style="margin-top:12px">TOTAL TAGIHAN SAAT INI</div><div class="num ' + (r.tunggakan > 0 ? '' : 'ok') + '" style="font-size:40px;line-height:46px;font-weight:700">' + rp(r.tunggakan) + '</div>' +
       '<div class="g2" style="margin-top:12px;gap:.5rem"><div class="card flat tight"><div class="small mute">SPP berjalan</div><b class="num">' + rp(r.berjalan) + '</b></div><div class="card flat tight"><div class="small mute">Tunggakan historis</div><b class="num ' + (r.historis > 0 ? 'warn' : 'ok') + '">' + rp(r.historis) + '</b></div></div>' +
       '<a class="btn deep block" style="margin-top:12px" data-act="waliWa">' + ic('chat') + ' Konfirmasi / Tanya Bendahara</a></div>' +
+      (d.muka && d.muka.pekan > 0 ? '<div class="note" style="margin-top:12px;background:#ccfbf1">' + ic('event_available') + '<p class="small"><b>Dibayar di muka</b> sampai <b>' + esc(d.muka.label) + '</b> (' + d.muka.pekan + ' pekan ke depan sudah lunas).</p></div>' : '') +
       (d.historis.length ? '<div class="card" style="margin-top:12px"><h3>' + ic('history') + 'Rincian tunggakan</h3><div style="margin-top:8px">' + d.historis.slice(-8).map(h => '<div class="bullet"><span>' + esc(ymLabel(h.periode)) + ' <span class="small mute">· ' + h.pekan + ' pekan</span></span><b class="num warn">' + rp(h.jumlah) + '</b></div>').join('') + '</div></div>' : '') +
       '<h2 style="margin:18px 0 8px">' + ic('event_repeat') + 'SPP Rutin Jumat (' + esc(ymLabel(today.slice(0, 7))) + ')</h2>' +
       d.bulanIni.map(x => { const l = lbl(x); return '<div class="wk ' + l[0] + '"><span class="dot">' + ic(l[1]) + '</span><div class="grow"><b>Pekan ' + x.k + '</b> ' + l[2] + '<div class="small mute">Jumat, ' + fmtTgl(x.due) + '</div></div><div class="right"><b class="num ' + (l[0] === 'tunggak' ? 'err' : '') + '">' + (x.status === 'libur' ? '—' : rp(x.tarif)) + '</b><div class="small mute">' + esc(l[3]) + '</div></div></div>'; }).join('') +

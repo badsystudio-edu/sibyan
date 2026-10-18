@@ -63,6 +63,7 @@ Tombol **Ubah pesan** membuka isi pesan. Variabel yang tersedia (ditulis dengan 
 | `{nama}` | Nama wali (bila kosong: "Bapak/Ibu") |
 | `{nama_santri}` `{nis}` `{kelas}` | Data santri |
 | `{uraian}` `{jumlah}` `{tanggal}` `{trx}` `{sisa}` | Rincian pembayaran (jumlah tanpa "Rp", sisa = tunggakan SPP setelah bayar) |
+| `{lunas_sampai}` | Sampai pekan mana SPP sudah lunas, termasuk pembayaran di muka (mis. *Pekan 3 November 2026*) |
 | `{sesi}` | Sesi absensi |
 | `{tingkat}` `{jenis}` `{sanksi}` | Data pelanggaran |
 | `{total}` `{rincian}` | Total & rincian tunggakan (untuk blast) |

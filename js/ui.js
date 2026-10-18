@@ -193,7 +193,7 @@ function receiptHtml(r, qr) {
     '<div class="ln"><span>Kelas</span><span>' + esc(r.kelas) + '</span></div><hr>' +
     '<div class="ln"><span>' + esc(r.uraian) + '</span><span>' + rp(r.nominal) + '</span></div>' +
     '<div class="ln tot"><span>TOTAL</span><span>' + rp(r.nominal) + '</span></div>' +
-    (r.jenis === 'SPP' ? '<div class="ln"><span>Sisa tunggakan</span><span>' + rp(r.sisaTunggakan) + '</span></div>' : '') +
+    (r.jenis === 'SPP' ? '<div class="ln"><span>Sisa tunggakan</span><span>' + rp(r.sisaTunggakan) + '</span></div>' : '') + (r.lunasSampai ? '<div class="ln"><span>Lunas s.d.</span><span class="b">' + esc(r.lunasSampai) + '</span></div>' : '') +
     '<hr><div class="qr">' + (qr || '') + '</div><div class="ctr small">' + esc(r.id) + '</div><div class="ctr small"><i>Jazakumullahu khairan katsiran</i></div></div>';
 }
 const Receipt = {
@@ -218,7 +218,7 @@ const Receipt = {
 ACT.rcPrint = () => printHtml(receiptHtml(Receipt.cur, Receipt.cur.qr), 'receipt');
 ACT.rcWa = () => {
   const r = Receipt.cur;
-  const t = 'Assalamu\'alaikum. Bukti pembayaran ' + r.pesantren.nama + '\n\nNo: ' + r.id + '\nTanggal: ' + fmtTgl(r.tanggal) + '\nSantri: ' + r.nama + ' (NIS ' + r.nis + ')\n' + r.uraian + ': ' + rp(r.nominal) + '\nMetode: ' + r.metode + '\nSisa tunggakan SPP: ' + rp(r.sisaTunggakan) + '\n\nJazakumullahu khairan.';
+  const t = 'Assalamu\'alaikum. Bukti pembayaran ' + r.pesantren.nama + '\n\nNo: ' + r.id + '\nTanggal: ' + fmtTgl(r.tanggal) + '\nSantri: ' + r.nama + ' (NIS ' + r.nis + ')\n' + r.uraian + ': ' + rp(r.nominal) + '\nMetode: ' + r.metode + '\nSisa tunggakan SPP: ' + rp(r.sisaTunggakan) + (r.lunasSampai ? '\nLunas sampai: ' + r.lunasSampai : '') + '\n\nJazakumullahu khairan.';
   window.open(waLink(r.hpWali, t), '_blank');
 };
 ACT.rcPdf = async el => busy(el, async () => {
@@ -229,7 +229,7 @@ ACT.rcPdf = async el => busy(el, async () => {
   l('No', r.id); l('Tgl', fmtTgl(r.tanggal) + ' ' + fmtJam(r.dibuat).replace(' WIB', '')); l('Petugas', r.petugas); l('Metode', r.metode); y += 1;
   l('Nama', r.nama.slice(0, 22)); l('NIS', r.nis); l('Kelas', r.kelas); y += 1;
   doc.setFontSize(7); doc.text(doc.splitTextToSize(r.uraian, 52), 3, y); y += 7; l('TOTAL', rp(r.nominal), true);
-  if (r.jenis === 'SPP') l('Sisa tunggakan', rp(r.sisaTunggakan)); y += 2; c('Jazakumullahu khairan', 7);
+  if (r.jenis === 'SPP') l('Sisa tunggakan', rp(r.sisaTunggakan)); if (r.lunasSampai) l('Lunas s.d.', r.lunasSampai); y += 2; c('Jazakumullahu khairan', 7);
   doc.save('Nota-' + r.id + '.pdf');
 });
 
@@ -301,7 +301,7 @@ async function bukuSppPdf(nis) {
         bayar += x.paid; if (x.due < d.dicetak) sisa += x.deficit; mrow.push(x.status);
         const l1 = f2(x.due);
         if (x.status === 'libur') return l1 + '\nLIBUR';
-        if (x.status === 'lunas') return l1 + '\nLUNAS' + (x.tgl ? ' ' + f2(x.tgl) : '');
+        if (x.status === 'lunas') return l1 + '\nLUNAS' + (x.due > d.dicetak ? ' (muka)' : (x.tgl ? ' ' + f2(x.tgl) : ''));
         if (x.status === 'sebagian') return l1 + '\nSisa ' + NUM(x.deficit);
         if (x.status === 'tunggak') return l1 + '\nTUNGGAK';
         if (x.status === 'sekarang') return l1 + '\nJatuh tempo';
@@ -322,9 +322,9 @@ async function bukuSppPdf(nis) {
   if (!d.tahun.length) { doc.addPage(); ctr('Belum ada data tagihan.', 70, 11, false); }
   // --- Ringkasan & iuran
   doc.addPage(); doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor.apply(doc, DEEP); doc.text('RINGKASAN & IURAN', 12, 14);
-  const r = d.ringkas;
+  const r = d.ringkas, mk = d.muka || {};
   doc.autoTable({
-    startY: 19, margin: { left: 12, right: 12 }, theme: 'grid', styles: { fontSize: 8.5, cellPadding: 1.8 }, headStyles: { fillColor: DEEP }, body: [['Total SPP dibayar', rp(d.totalDibayar)], ['Tunggakan saat ini', rp(r.tunggakan) + (r.pekanTunggak ? ' (' + r.pekanTunggak + ' pekan)' : '')], ['  – tunggakan bulan-bulan lalu', rp(r.historis)], ['  – tunggakan bulan berjalan', rp(r.berjalan)]],
+    startY: 19, margin: { left: 12, right: 12 }, theme: 'grid', styles: { fontSize: 8.5, cellPadding: 1.8 }, headStyles: { fillColor: DEEP }, body: [['Total SPP dibayar', rp(d.totalDibayar)], ['Tunggakan saat ini', rp(r.tunggakan) + (r.pekanTunggak ? ' (' + r.pekanTunggak + ' pekan)' : '')], ['  – tunggakan bulan-bulan lalu', rp(r.historis)], ['  – tunggakan bulan berjalan', rp(r.berjalan)], ['Dibayar di muka sampai', mk.label || '-']],
     columnStyles: { 0: { cellWidth: 70, fontStyle: 'bold' }, 1: { halign: 'right' } }, tableWidth: 150
   });
   if (d.iuran.length) doc.autoTable({

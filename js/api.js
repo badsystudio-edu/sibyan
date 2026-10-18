@@ -3,7 +3,7 @@
  * POST memakai text/plain agar tidak memicu preflight CORS.
  * ============================================================ */
 /* Versi aplikasi (samakan dengan APP_VERSI di Kode.gs, sw.js, version.json, dan ?v= di index.html) */
-const APP_VERSI = '3.1.0';
+const APP_VERSI = '3.2.0';
 
 const Api = {
   token: localStorage.getItem('sibyan_token') || '',
