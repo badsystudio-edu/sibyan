@@ -1,10 +1,19 @@
-/* Service worker sederhana: cangkang aplikasi tersedia cepat; data selalu dari server. */
-const CACHE = 'sibyan-v1';
-const SHELL = ['./', 'index.html', 'css/style.css', 'js/config.js', 'js/api.js', 'js/ui.js', 'js/pages-public.js', 'js/pages-admin.js', 'js/pages-santri.js', 'js/pages-keuangan.js', 'js/pages-laporan.js', 'js/pages-wali.js', 'js/app.js', 'assets/logo.png', 'manifest.json'];
-self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
-self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
+/* Service worker SIBYAN v3.1.0
+ * Tujuan: aplikasi bisa dipasang (PWA) TANPA menahan versi lama.
+ * Strategi: jaringan dulu (selalu cek pembaruan ke server), cache hanya sebagai cadangan saat offline.
+ * Data (Google Apps Script) dan pustaka CDN tidak pernah dicegat. */
+const VERSI = '3.1.0';
+const CACHE = 'sibyan-' + VERSI;
+self.addEventListener('install', () => { self.skipWaiting(); });
+self.addEventListener('activate', e => {
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+});
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
-  if (e.request.method !== 'GET' || u.origin !== location.origin) return;   // GAS & CDN tidak dicegat
-  e.respondWith(fetch(e.request).then(r => { const cp = r.clone(); caches.open(CACHE).then(c => c.put(e.request, cp)); return r; }).catch(() => caches.match(e.request)));
+  if (e.request.method !== 'GET' || u.origin !== location.origin) return;
+  e.respondWith(
+    fetch(new Request(e.request.url, { cache: 'no-cache', credentials: 'same-origin' }))
+      .then(r => { if (r && r.ok) { const cp = r.clone(); caches.open(CACHE).then(c => c.put(e.request, cp)); } return r; })
+      .catch(() => caches.match(e.request))
+  );
 });

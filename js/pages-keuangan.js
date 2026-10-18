@@ -48,7 +48,7 @@ const Spp = {
       '<div class="card tight"><div class="row wrap" style="gap:.75rem"><div><label class="f">Jenjang / kelas</label><select class="inp" data-ch="sppKelas" style="width:auto">' + kelasOpts(this.kelas, 'Semua kelas') + '</select></div><div><label class="f">Bulan</label><input class="inp" type="month" data-ch="sppBulan" value="' + this.periode + '" style="width:auto"></div>' +
       '<div class="search grow" style="min-width:180px;align-self:flex-end">' + ic('search') + '<input class="inp" data-in="sppQ" placeholder="Cari santri atau NIS…" value="' + esc(this.q) + '"></div></div>' +
       '<div class="pills" style="margin-top:10px">' + [1, 2, 3, 4].map(i => '<button class="pill ' + (i === k ? 'on' : '') + (d.periode === d.today.slice(0, 7) && i === d.currentK ? ' now' : '') + '" data-act="sppWeek" data-k="' + i + '">Pekan ' + i + ' · ' + fmtTgl(d.fridays[i - 1]).slice(0, -5) + '</button>').join('') + '</div></div>' +
-      '<div class="selbar"><label class="row b" style="gap:.5rem"><input type="checkbox" class="ck" data-ch="sppAll"> Pilih semua yang belum lunas (pekan ' + k + ')</label><span class="small mute" id="selCnt"></span><div class="acts"><button class="btn deep" data-act="sppBulk" id="bulkBtn">' + ic('bolt') + ' Tandai Lunas Sekaligus</button><button class="btn soft" data-act="sppWa">' + ic('chat') + ' Pengingat WhatsApp</button><button class="btn ghost" data-act="sppPrint">' + ic('print') + ' Cetak Rekap</button></div></div>' +
+      '<div class="selbar"><label class="row b" style="gap:.5rem"><input type="checkbox" class="ck" data-ch="sppAll"> Pilih semua yang belum lunas (pekan ' + k + ')</label><span class="small mute" id="selCnt"></span><div class="acts"><button class="btn deep" data-act="sppBulk" id="bulkBtn">' + ic('bolt') + ' Tandai Lunas Sekaligus</button><button class="btn soft" data-act="sppWa">' + ic('chat') + ' Pengingat WhatsApp</button><button class="btn ghost" data-act="sppPrint">' + ic('print') + ' Cetak Rekap</button><a class="btn ghost" href="#/admin/laporan?tab=matriks">' + ic('grid_on') + ' Matriks Centang</a></div></div>' +
       '<div class="card"><div class="row between wrap"><h2>' + ic('list_alt') + 'Daftar Setoran Pekanan</h2>' + chip('Pekan ' + k + ': ' + fmtTgl(fd), 'ok') + '</div><p class="small mute" style="margin-bottom:10px">' + esc(ymLabel(d.periode)) + ' · ' + esc(d.kelas || 'Semua kelas') + ' (' + tot + ' santri)</p>' +
       (tot ? '<div class="tw"><table class="tbl"><thead><tr><th style="width:36px"></th><th>Santri & NIS</th>' + [1, 2, 3, 4].map(i => '<th class="c ' + (i === k ? 'now' : '') + '">Pekan ' + i + '<br><span style="text-transform:none;font-weight:400">' + fmtTgl(d.fridays[i - 1]).slice(0, -5) + '</span></th>').join('') + '<th class="r">Tunggakan</th><th class="c">Aksi</th></tr></thead><tbody>' +
         pg.map(r => '<tr class="' + (r.pekanTunggak > 0 ? 'tung' : '') + '"><td><input type="checkbox" class="ck" data-ch="sppSel" data-nis="' + esc(r.nis) + '" ' + (this.sel.has(r.nis) ? 'checked' : '') + '></td><td><div class="row" style="gap:.6rem">' + avatar(r.nama, r.nis, r.adaFoto) + '<div><b>' + esc(r.nama) + '</b><div class="small mute num">NIS ' + esc(r.nis) + '</div></div></div></td>' +
@@ -103,15 +103,16 @@ INP.sppSlot = el => { const o = el.options[el.selectedIndex]; el.closest('form')
 FRM.sppPay = f => busy(f.querySelector('button[type=submit]'), async () => {
   const p = f.slot.value.split('|');
   const r = await Api.post('paySpp', { nis: f.nis.value, periode: p[0] === '0' ? '' : p[1] ? p[0] : '', angsuran: p[0] === '0' ? 0 : +p[1], nominal: f.nominal.value, tanggal: f.tanggal.value, metode: f.metode.value, catatan: f.catatan.value });
-  Modal.closeAll(); await refreshView(); toast(r.duplikat ? 'Transaksi identik baru saja dicatat; tidak dobel.' : 'Pembayaran tercatat: ' + r.id, 'success'); Receipt.show(r.receipt);
+  Modal.closeAll(); await refreshView(); toast(r.duplikat ? 'Transaksi identik baru saja dicatat; tidak dobel.' : 'Pembayaran tercatat: ' + r.id, 'success'); kickNotif(r.notif); Receipt.show(r.receipt);
 });
 ACT.sppBulk = async el => {
   const k = Spp.k, per = Spp.data.periode, list = [...Spp.sel];
   if (!list.length) return;
   if (!await confirmBox('Tandai <b>lunas</b> SPP <b>Pekan ' + k + ' ' + esc(ymLabel(per)) + '</b> untuk <b>' + list.length + ' santri</b>? Hanya sisa yang belum lunas yang dicatat; yang sudah lunas dilewati otomatis.', 'Ya, tandai lunas')) return;
   busy(el, async () => {
-    const ok = [], skip = [];
-    for (let i = 0; i < list.length; i += 50) { const r = await Api.post('payBulk', { periode: per, angsuran: k, nisList: list.slice(i, i + 50), tanggal: todayStr(), metode: 'Tunai' }); ok.push(...r.berhasil); skip.push(...r.dilewati); }
+    const ok = [], skip = []; let nq = 0;
+    for (let i = 0; i < list.length; i += 50) { const r = await Api.post('payBulk', { periode: per, angsuran: k, nisList: list.slice(i, i + 50), tanggal: todayStr(), metode: 'Tunai' }); ok.push(...r.berhasil); skip.push(...r.dilewati); nq += r.notif || 0; }
+    kickNotif(nq);
     Spp.sel.clear(); await Spp.load();
     Modal.open(mHead('Hasil Tandai Lunas') + '<div class="g2"><div class="card flat tight stat"><span class="lab">Berhasil dicatat</span><span class="val ok">' + ok.length + ' santri</span><span class="small mute">' + rp(ok.reduce((s, x) => s + x.nominal, 0)) + '</span></div><div class="card flat tight stat"><span class="lab">Dilewati</span><span class="val">' + skip.length + '</span></div></div>' +
       (skip.length ? '<div class="tw" style="max-height:180px;overflow:auto;margin-top:10px"><table class="tbl" style="min-width:0"><tbody>' + skip.map(x => '<tr><td class="num">' + esc(x.nis) + '</td><td>' + esc(x.alasan) + '</td></tr>').join('') + '</tbody></table></div>' : '') + '<div class="mf"><button class="btn deep" data-act="close">Selesai</button></div>', 'narrow');
@@ -180,6 +181,6 @@ FRM.iuranPay = f => {
   if (!f.nis.value) { toast('Pilih santri dari daftar hasil pencarian.', 'error'); return; }
   return busy(f.querySelector('button[type=submit]'), async () => {
     const r = await Api.post('payIuran', { nis: f.nis.value, idIuran: f.idIuran.value, nominal: f.nominal.value, tanggal: f.tanggal.value, metode: f.metode.value, catatan: f.catatan.value });
-    Modal.closeAll(); await refreshView(); toast('Pembayaran iuran tercatat: ' + r.id, 'success'); Receipt.show(r.receipt);
+    Modal.closeAll(); await refreshView(); toast('Pembayaran iuran tercatat: ' + r.id, 'success'); kickNotif(r.notif); Receipt.show(r.receipt);
   });
 };

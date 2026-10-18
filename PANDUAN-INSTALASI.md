@@ -83,6 +83,85 @@ Lupa password admin? Ubah `PASSWORD_BARU` di dalam fungsi `resetPasswordAdmin`, 
    - [ ] Ekspor Excel/PDF sama dengan tabel di layar; nota tercetak benar; QR kartu santri terbaca.
    - [ ] Nyaman di HP dan laptop; uji ringan simulasi hari Jumat.
 
+## Fitur v3: Absensi, Pelanggaran, Berita, Buku SPP, WhatsApp Otomatis, Matriks Centang
+
+> **Memperbarui dari versi sebelumnya (data aman):**
+> 1. Tempel `Kode-gs.txt` baru ke `Kode.gs` di Apps Script (ganti seluruh isi).
+> 2. **Wajib sekali:** pilih fungsi **`pasangTrigger`** → ▶ **Run** → *Review permissions → Allow*. (Fitur baru butuh izin tambahan: kirim WhatsApp lewat internet & pewaktu 1 menit.) Log harus menampilkan "Trigger notifikasi (1 menit) aktif".
+> 3. **Deploy → Manage deployments → ✏ Edit → Version: New version → Deploy**.
+> 4. Frontend: ganti berkas dari ZIP **kecuali `js/config.js`** milik Anda, lalu `git add .` → `git commit -m "v3"` → `git push`. Tekan **Ctrl+Shift+R** di peramban.
+> Sheet baru (Absensi, Pelanggaran, Berita, AntrianNotif, BlastWA, CRM_Kontak, CRM_Interaksi, Libur) dibuat otomatis.
+
+### 1. Absensi santri (menu **Absensi Santri**)
+Pilih tanggal, sesi (mis. Subuh/Maghrib/Diniyah — atur di **Pengaturan → Identitas → Sesi absensi**) dan kelas. Semua santri bawaannya *Hadir*; ketuk **I** (izin), **S** (sakit), **A** (alpa) hanya untuk yang tidak hadir, lalu **Simpan**. Tab **Rekap** menampilkan hadir/izin/sakit/alpa dan persentase per bulan (bisa diekspor Excel). Wali melihat kehadiran anaknya di tab **Santri**.
+
+### 2. Catatan pelanggaran (menu **Catatan Pelanggaran**)
+Catat santri, tanggal, tingkat (ringan ±5 / sedang ±10 / berat ±25 poin, bisa diubah), jenis, uraian, sanksi. Bisa difilter per kelas/tingkat/tanggal. Bendahara dan Super Admin boleh mencatat; **hanya Super Admin yang menghapus** (tercatat di Log Audit). Wali melihat catatan anaknya sendiri.
+
+### 3. Berita & pengumuman (menu **Berita**)
+Tulis berita, pilih kategori, unggah **1 sampai 6 gambar** (dikecilkan otomatis), pilih *Terbit* atau *Draf*, boleh disematkan di atas. Berita terbit **langsung muncul bersama gambarnya** di beranda publik dan di tab **Berita** portal wali. Gambar disimpan di folder Drive `Berita` dan dibuat *publik (siapa saja yang punya tautan)* agar tampil tanpa login — **jangan unggah foto santri atau data pribadi di berita**.
+
+### 4. Ikon mata pada password
+Semua kolom password (login, Akun Saya, buat akun, token Fonnte) punya ikon 👁 untuk menampilkan/menyembunyikan.
+
+### 5. Buku SPP PDF (20 × 14,5 cm, landscape)
+- **Admin:** Data Santri → ikon *Detail* → tombol **Buku SPP (PDF)**.
+- **Wali:** tab **Kuitansi** → kartu **Buku SPP** → **PDF**.
+Isi: sampul, tabel per tahun (bulan × Pekan 1–4 berwarna: hijau lunas + tanggal bayar, merah tunggak, biru libur, kuning sebagian), total dibayar & sisa, ringkasan iuran, serta kolom tanda tangan wali dan bendahara. Saat mencetak, pilih ukuran kertas **Custom 200 × 145 mm** atau "Actual size".
+
+### 6. Notifikasi WhatsApp otomatis saat ada pembayaran (Fonnte)
+Pola: pembayaran → pesan masuk **antrean** → langsung dikirim (±1–2 detik) → bila gagal diulang otomatis oleh trigger 1 menit (maks. 3×). Kasir tidak pernah menunggu Fonnte.
+1. Daftar di <https://fonnte.com>, hubungkan nomor WhatsApp pesantren, salin **Token**.
+2. Menu **WhatsApp & Notifikasi → Konfigurasi** (Super Admin): tempel token → **Cek Perangkat** (harus *connect*) → **Kirim Tes WA** ke nomor Anda → geser saklar **AKTIF** → **Simpan Konfigurasi**.
+3. **Matriks Notifikasi** mengatur kejadian mana yang mengirim WA: *Pembayaran SPP* dan *Pembayaran iuran* (aktif bawaan), *Santri alpa* dan *Pelanggaran dicatat* (mati bawaan, karena sensitif). Isi pesan bisa diubah per kejadian.
+4. Token **hanya** disimpan di Script Properties, tidak pernah tertulis di spreadsheet atau tampil lagi di layar. Wali tidak dikirimi pesan bila nomor HP wali kosong/tidak valid (pembayaran tetap berhasil).
+5. Tab **Antrean** memantau Menunggu / Terkirim / Gagal; tombol **Ulangi yang Gagal**.
+- **Blast** (tab Blast): kirim pengingat tunggakan atau pengumuman ke banyak wali per batch **10/20/50**, jeda antarpesan 5 detik (atau 3-8). Nomor ganda, tidak valid, dan yang *opt-out* otomatis dibuang. Disarankan mulai dari batch 10. Server melanjutkan batch berikutnya tiap menit walau halaman ditutup; **Hentikan** membatalkan sisa pesan.
+- **CRM Kontak**: nomor wali disinkron otomatis dari data santri (satu kontak per nomor; kakak-adik digabung). Bisa diberi tag/catatan, ditandai opt-out, dicek apakah nomor terdaftar WhatsApp, diimpor (kontak manual: ustadz/donatur), digabung bila duplikat. Mengubah nama/nomor kontak wali otomatis memperbarui data santri. Ekspor hanya Super Admin.
+- Kanal email **tidak dipakai** (sesuai PRD); kolom email di CRM hanya sebagai data.
+- Biaya pesan mengikuti paket Fonnte Anda. Hindari mengirim pesan yang sama ke ratusan nomor sekaligus untuk menekan risiko nomor diblokir WhatsApp.
+
+### 7. Matriks centang pelunasan (**Laporan & Audit → Matriks Centang**, atau tombol di halaman SPP)
+Tabel seluruh santri × tiap pekan (maks. 6 bulan): ✓ lunas, ✗ menunggak, ◐ sebagian, · belum jatuh tempo, L libur. Kolom **Lunas s.d.** memperlihatkan sampai pekan mana santri sudah melunasi berurutan; baris bawah menghitung jumlah lunas per pekan. Bisa difilter per kelas, diekspor Excel, dan dicetak.
+
+### Keamanan tambahan
+Teks isian yang berawalan `=`, `+`, `-`, `@` kini tidak lagi dieksekusi sebagai rumus Google Sheets.
+
+## Fitur v3.1: Aktivitas Wali, ajakan memasang aplikasi, pembaruan otomatis, diagnosa
+
+### Aktivitas Wali (menu **Aktivitas Wali**)
+Memantau siapa yang sudah login dan membuka tagihan/kuitansi anaknya. Tabel per akun wali: terakhir login, terakhir mengecek tagihan (merah/kuning bila lama), jumlah membuka, perangkat (Android/iPhone/…) dan apakah **aplikasi sudah dipasang**. Kartu ringkasan (bisa diklik sebagai filter): belum pernah login, cek tagihan 7 hari, **menunggak & belum cek** (prioritas penagihan), pemasang aplikasi. Urutan bawaan: wali yang menunggak dan belum mengecek berada di atas. Tombol **WA** per baris membuka WhatsApp dengan pesan ajakan/pengingat (berisi username, bukan password); tombol **Blast** di atas mengirim ke banyak wali sekaligus. Profil santri juga menampilkan kapan wali terakhir mengecek tagihan.
+- Dicatat server saat wali login dan membuka halaman (pembukaan berulang dalam 10 menit dihitung satu kali). Pengunjung beranda publik anonim, jadi tidak tercatat.
+- Perlu akun wali yang sudah dibuat di Pengaturan → Akun Pengguna.
+
+### Popup ajakan memasang aplikasi (untuk wali)
+Setelah wali login dan belum memasang aplikasi, muncul popup **"Pasang SIBYAN di HP Anda"** (sekali per sesi) dengan tombol **Pasang Sekarang** (Android/Chrome langsung memunculkan dialog pasang; iPhone/lainnya menampilkan langkah manual), **Nanti saja** (muncul lagi 7 hari kemudian) dan **Jangan tampilkan lagi**. Tidak muncul bila aplikasi sudah dipasang.
+
+### Pembaruan otomatis & pemeriksa versi
+- Semua berkas diberi nomor versi (`?v=3.1.0`) dan service worker selalu memeriksa pembaruan ke server, sehingga versi baru tidak lagi tertahan di cache. Bila ada versi baru, muncul banner **"Muat ulang sekarang"**.
+- Bila server Apps Script masih versi lama, admin melihat banner kuning beserta caranya memperbarui. Versi tampil di sidebar (Aplikasi vX · Server vY).
+- **`cek.html`** (buka `alamat-situs/cek.html`) adalah pemeriksa mandiri: mengecek setiap berkas di GitHub Pages, versi `index.html`, versi server Apps Script, dan isi cache peramban — lalu menuliskan masalahnya dalam bahasa sederhana. Tombol **Bersihkan cache & muat ulang** tersedia di sana. Halaman ini tetap berfungsi walau aplikasi utama masih versi lama, jadi **unggah `cek.html` lebih dulu** bila menu baru tidak muncul.
+
+### Jika menu/fitur baru tidak muncul — urutan pemeriksaan
+1. Buka `https://USERNAME.github.io/NAMA-REPO/cek.html` dan ikuti daftar masalahnya.
+2. **Cara paling aman mengganti seluruh isi repo** (PowerShell, di folder repo yang berisi `index.html`):
+```powershell
+Copy-Item js\config.js ..\config.backup.js              # simpan config Anda
+Get-ChildItem -Exclude .git | Remove-Item -Recurse -Force # kosongkan isi (folder .git aman)
+Copy-Item -Recurse -Force "C:\LOKASI\ZIP-BARU\sibyan-spp-pesantren\*" .
+Copy-Item ..\config.backup.js js\config.js -Force        # kembalikan config
+git add -A
+git commit -m "Update v3.1"
+git push
+git log --oneline -3                                      # pastikan commit terbaru tampil
+```
+3. Di github.com, buka repo → folder `js`: harus ada `pages-wa.js`, `pages-aktivitas.js`, `pages-absensi.js`, `pages-berita.js`. Tab **Actions** harus hijau (build Pages selesai).
+4. Server: tempel `Kode-gs.txt` terbaru → jalankan `pasangTrigger` → Deploy **New version**.
+5. HP/komputer: buka `cek.html` → **Bersihkan cache & muat ulang**.
+
+### Fonnte rinci
+Lihat berkas **PANDUAN-FONNTE.md** (langkah menghubungkan, arti tiap pengaturan, jam kirim, batas harian, uji, pemecahan masalah).
+
 ## Fitur: Tambah Kelas & Libur / Bebas Bayar (Super Admin)
 
 **Tambah kelas** — dua cara:
@@ -118,4 +197,5 @@ Nota memakai format struk 58 mm. Di Android, pasang aplikasi pencetak (mis. **Ra
 | "Tidak dapat terhubung ke server" | Deploy belum diset *Anyone*, atau lupa **New version** setelah ubah kode. |
 | Login selalu salah | Gagal 5× dikunci 10 menit. Tunggu, atau pakai `resetPasswordAdmin`. |
 | Error CORS di Console | Pastikan URL berakhiran `/exec` (bukan `/dev`) dan akses *Anyone*. |
+| Notifikasi WA tidak terkirim | Cek tab Antrean. Pastikan token terisi, saklar AKTIF, perangkat Fonnte *connect*, dan fungsi `pasangTrigger` sudah dijalankan. |
 | Server lambat setelah ± puluhan ribu transaksi | Arsipkan transaksi tahun lama ke spreadsheet lain. |

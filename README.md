@@ -11,4 +11,4 @@ js/config.js   ← isi GAS_URL di sini
 js/api.js  ui.js  app.js  pages-*.js
 assets/logo.png  icon-192.png  icon-512.png
 ```
-Langkah lengkap: lihat `PANDUAN-INSTALASI.md`.
+Langkah lengkap: `PANDUAN-INSTALASI.md`. Notifikasi WhatsApp: `PANDUAN-FONNTE.md`. Bila menu baru tidak muncul: buka `cek.html`.

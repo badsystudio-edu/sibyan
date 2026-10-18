@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cek Versi SIBYAN</title>
+<style>
+  body{font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:0;background:#f8fafc;color:#0f172a}
+  main{max-width:720px;margin:0 auto;padding:16px}
+  h1{font-size:22px;margin:8px 0 4px}h2{font-size:16px;margin:0 0 8px}
+  .card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:14px 16px;margin:12px 0}
+  .row{display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-bottom:1px solid #f1f5f9}.row:last-child{border:0}
+  .ic{width:22px;flex:none;text-align:center;font-weight:700}.ok{color:#059669}.bad{color:#dc2626}.wait{color:#d97706}
+  .mute{color:#64748b;font-size:13px}code{background:#f1f5f9;padding:1px 6px;border-radius:6px;font-size:13px}
+  button,a.btn{display:inline-block;border:0;border-radius:999px;padding:10px 18px;background:#0f5132;color:#fff;font:600 14px system-ui;cursor:pointer;text-decoration:none;margin:4px 6px 4px 0}
+  button.gh{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
+  .box{border-radius:12px;padding:10px 12px;margin-top:8px;font-size:14px}.box.ok{background:#ecfdf5;color:#065f46}.box.bad{background:#fef2f2;color:#991b1b}.box.wait{background:#fffbeb;color:#92400e}
+</style>
+</head>
+<body>
+<main>
+  <h1>Cek Versi & Pembaruan SIBYAN</h1>
+  <p class="mute">Halaman ini memeriksa apakah berkas terbaru sudah terbit di GitHub Pages, apakah server Apps Script sudah versi terbaru, dan apakah peramban masih menyimpan versi lama.</p>
+  <button id="go">Periksa lagi</button><button class="gh" id="clear">Bersihkan cache &amp; muat ulang aplikasi</button><a class="btn gh" href="./">Buka aplikasi</a>
+  <div id="summary"></div>
+  <div class="card"><h2>1. Berkas di GitHub Pages</h2><div id="files"></div></div>
+  <div class="card"><h2>2. Versi</h2><div id="ver"></div></div>
+  <div class="card"><h2>3. Server Google Apps Script</h2><div id="srv"></div></div>
+  <div class="card"><h2>4. Peramban (cache &amp; service worker)</h2><div id="brw"></div></div>
+</main>
+<script>
+const EXPECT = '3.1.0';
+const FILES = ['index.html','css/style.css','js/config.js','js/api.js','js/ui.js','js/pages-public.js','js/pages-admin.js','js/pages-santri.js','js/pages-keuangan.js','js/pages-laporan.js','js/pages-absensi.js','js/pages-berita.js','js/pages-wa.js','js/pages-aktivitas.js','js/pages-wali.js','js/app.js','sw.js','version.json','manifest.json'];
+const $=s=>document.querySelector(s);
+const row=(st,t,sub)=>'<div class="row"><span class="ic '+st+'">'+({ok:'✓',bad:'✗',wait:'…'})[st]+'</span><div>'+t+(sub?'<div class="mute">'+sub+'</div>':'')+'</div></div>';
+const nocache=u=>fetch(u+(u.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store'});
+let problems=[];
+async function run(){
+  problems=[];$('#summary').innerHTML='';
+  ['#files','#ver','#srv','#brw'].forEach(s=>$(s).innerHTML=row('wait','Memeriksa…'));
+  // 1. berkas
+  let html='',idx='',cfg='';
+  for(const f of FILES){
+    try{const r=await nocache(f);const t=await r.text();if(r.ok){html+=row('ok',f,(t.length/1024).toFixed(1)+' KB');if(f==='index.html')idx=t;if(f==='js/config.js')cfg=t}else{html+=row('bad',f,'tidak ditemukan (HTTP '+r.status+')');problems.push('Berkas <code>'+f+'</code> belum ada di GitHub Pages. Pastikan semua berkas dari ZIP terbaru ikut di-push (<code>git add .</code>, <code>git commit</code>, <code>git push</code>) dari folder yang berisi index.html.')}}
+    catch(e){html+=row('bad',f,'gagal dimuat');problems.push('Gagal memuat <code>'+f+'</code>.')}
+  }
+  $('#files').innerHTML=html;
+  // 2. versi
+  let v='';
+  if(idx){const ok=idx.includes('pages-wa.js')&&idx.includes('pages-aktivitas.js');v+=row(ok?'ok':'bad','index.html '+(ok?'memuat berkas fitur terbaru':'MASIH VERSI LAMA (tidak memuat pages-wa.js / pages-aktivitas.js)'));if(!ok)problems.push('<b>index.html masih versi lama</b> — inilah penyebab menu baru tidak muncul. Ganti index.html (dan seluruh isi folder css, js, assets) dengan isi ZIP terbaru, lalu push ulang.')}
+  try{const j=await (await nocache('version.json')).json();const ok=j.versi===EXPECT;v+=row(ok?'ok':'bad','version.json: v'+j.versi,ok?'sesuai versi yang diharapkan (v'+EXPECT+')':'diharapkan v'+EXPECT);if(!ok)problems.push('version.json versi '+j.versi+' ≠ v'+EXPECT+'. Berkas belum diperbarui.')}catch(e){v+=row('bad','version.json tidak terbaca');problems.push('version.json tidak ada.')}
+  try{const a=await (await nocache('js/api.js')).text();const m=/APP_VERSI\s*=\s*'([^']+)'/.exec(a);const ok=m&&m[1]===EXPECT;v+=row(ok?'ok':'bad','js/api.js: '+(m?'v'+m[1]:'versi tidak ditemukan'),ok?'':'berkas JavaScript lama');if(!ok)problems.push('js/api.js masih versi lama.')}catch(e){}
+  $('#ver').innerHTML=v;
+  // 3. server
+  const mm=/GAS_URL\s*=\s*'([^']*)'/.exec(cfg);let s='';
+  if(!mm||mm[1].includes('ISI_DENGAN')){s=row('bad','GAS_URL belum diisi di js/config.js');problems.push('Isi <code>GAS_URL</code> di js/config.js dengan URL Web App (berakhiran /exec).')}
+  else{
+    s+=row('ok','GAS_URL terisi',mm[1].slice(0,60)+'…');
+    try{const r=await fetch(mm[1]+'?action=ping&data=%7B%7D',{cache:'no-store'});const j=await r.json();
+      if(j.success){const ver=j.data.versi;const ok=ver===EXPECT;s+=row(ok?'ok':'bad','Server menjawab. Versi server: '+(ver?'v'+ver:'LAMA (belum punya nomor versi)'),ok?'Fitur server: '+(j.data.fitur||[]).join(', '):'diharapkan v'+EXPECT);if(!ok)problems.push('<b>Server Apps Script masih versi lama.</b> Tempel isi Kode-gs.txt terbaru ke Kode.gs → jalankan <code>pasangTrigger</code> → <b>Deploy → Manage deployments → ✏ Edit → Version: New version → Deploy</b>.')}
+      else{s+=row('bad','Server menjawab error: '+(j.message||'?'));problems.push('Server menjawab error: '+(j.message||''))}}
+    catch(e){s+=row('bad','Tidak dapat menghubungi server','Periksa URL /exec, dan pengaturan deploy: Execute as <b>Me</b>, akses <b>Anyone</b>.');problems.push('Server tidak dapat dihubungi. Periksa GAS_URL dan pengaturan deploy (Anyone).')}
+  }
+  $('#srv').innerHTML=s;
+  // 4. peramban
+  let b='';
+  try{const regs=await navigator.serviceWorker.getRegistrations();b+=row(regs.length?'wait':'ok','Service worker terdaftar: '+regs.length,regs.length?'Normal untuk aplikasi yang dipasang. Bila tampilan tidak berubah, klik “Bersihkan cache”.':'')}catch(e){b+=row('ok','Service worker tidak aktif')}
+  try{const ks=await caches.keys();b+=row(ks.length?'wait':'ok','Cache tersimpan: '+(ks.join(', ')||'tidak ada'))}catch(e){}
+  b+=row('ok','Mode: '+((window.matchMedia&&matchMedia('(display-mode: standalone)').matches)?'aplikasi terpasang (standalone)':'peramban biasa'));
+  $('#brw').innerHTML=b;
+  // ringkasan
+  $('#summary').innerHTML=problems.length?'<div class="box bad"><b>Ditemukan '+problems.length+' masalah:</b><ol style="margin:6px 0 0;padding-left:20px">'+problems.map(p=>'<li>'+p+'</li>').join('')+'</ol></div>':'<div class="box ok"><b>Semua beres.</b> Berkas dan server sudah versi terbaru. Bila menu belum terlihat di aplikasi, klik “Bersihkan cache &amp; muat ulang aplikasi”.</div>';
+}
+$('#go').onclick=run;
+$('#clear').onclick=async()=>{try{(await navigator.serviceWorker.getRegistrations()).forEach(r=>r.unregister());(await caches.keys()).forEach(k=>caches.delete(k))}catch(e){}location.href='./?bersih='+Date.now()};
+run();
+</script>
+</body>
+</html>

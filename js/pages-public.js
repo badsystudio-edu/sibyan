@@ -13,7 +13,7 @@ const Pub = {
 
   loginForm() {
     return '<form data-form="login" autocomplete="on"><div class="fg"><label class="f" for="lg-u">Username / No. WhatsApp</label><input class="inp" id="lg-u" name="username" autocomplete="username" autocapitalize="none" required placeholder="mis. admin atau 0812xxxx"></div>' +
-      '<div class="fg"><label class="f" for="lg-p">Password</label><input class="inp" id="lg-p" name="password" type="password" autocomplete="current-password" required placeholder="Password akun"></div>' +
+      '<div class="fg"><label class="f" for="lg-p">Password</label>' + pwHtml('password', 'id="lg-p" autocomplete="current-password" required placeholder="Password akun"') + '</div>' +
       '<button class="btn deep block" type="submit">' + ic('login') + ' Masuk</button><p class="hint center" style="margin-top:10px">Akun wali dibuat oleh pengurus pesantren. Lupa password? Hubungi Bendahara.</p></form>';
   },
 
@@ -26,7 +26,7 @@ const Pub = {
       '<div class="chips row wrap"><span class="small mute b">FILTER JENJANG:</span><button type="button" class="pill ' + (!this.kelas ? 'on' : '') + '" data-act="pubKelas" data-k="">Semua Santri</button>' +
       kelas.map(k => '<button type="button" class="pill ' + (this.kelas === k ? 'on' : '') + '" data-act="pubKelas" data-k="' + esc(k) + '">' + esc(k) + '</button>').join('') + '</div></form></div></section>' +
       '<div class="wrap"><div class="pub-grid"><div class="stack"><div class="note"><div class="ico">' + ic('lock') + '</div><div><h3>Protokol Keamanan Data Santri (Mode Tamu)</h3><p class="small mute" style="margin-top:4px">Untuk melindungi privasi keluarga santri, <b>nominal rupiah, riwayat transaksi, alamat, nomor kontak wali, dan foto</b> hanya dapat diakses melalui login Wali Santri resmi.</p></div></div>' +
-      '<div id="pubRes"></div></div>' +
+      '<div id="pubRes"></div><div><h2 style="margin:6px 0 12px">' + ic('newspaper') + 'Berita & Pengumuman</h2><div id="pubBerita"></div></div></div>' +
       '<aside class="stack">' + (Api.user ? '<div class="card"><h3>' + ic('verified_user') + ' Anda sudah masuk</h3><p class="small mute" style="margin:6px 0 12px">Sebagai ' + esc(Api.user.nama) + '.</p><a class="btn deep block" href="#' + App.homeOf(Api.user) + '">Buka Dasbor</a></div>' : '<div class="card"><h3>' + ic('key') + ' Akses Masuk</h3><p class="small mute" style="margin:6px 0 14px">Wali santri, Bendahara, dan Super Admin masuk di sini untuk melihat rincian lengkap.</p>' + this.loginForm() + '</div>') +
       '<div class="card tight row" style="gap:.75rem"><span class="avatar">' + ic('install_mobile') + '</span><div class="grow"><b>Pasang sebagai aplikasi di HP</b><p class="small mute">Ringan dan hemat memori, tanpa Play Store.</p></div><button class="btn soft sm" data-act="pwa">Pasang</button></div>' +
       '<div class="card tight row" style="gap:.75rem"><span class="avatar">' + ic('event_repeat') + '</span><div><b>SPP Rutin Setiap Hari Jumat</b><p class="small mute">Iuran mingguan berkah ba\'da sholat Jumat di kantor Musholla.</p></div></div>' +
@@ -34,6 +34,7 @@ const Pub = {
       (App.info && App.info.alamat ? '<div class="note" style="background:var(--info-bg)"><div><b>' + esc(App.name()) + '</b><p class="small mute">' + esc(App.info.alamat) + '</p></div></div>' : '') + '</aside></div></div>' +
       '<div class="hadith"><div class="ar" lang="ar" dir="rtl">خَيْرُ النَّاسِ أَنْفَعُهُمْ لِلنَّاسِ</div><p class="small mute" style="margin-top:6px"><i>"Sebaik-baik manusia adalah yang paling bermanfaat bagi sesamanya."</i></p></div>' +
       '<footer class="foot">© ' + new Date().getFullYear() + ' ' + esc(App.name()) + '. Sistem Informasi Bayar dan Administrasi Santri.</footer>';
+    Brt.loadInto('#pubBerita');
     if (params && params.get('nis')) { this.q = params.get('nis'); $('#pq').value = this.q; this.search(); }
     else if (this.res) this.renderRes();
   },
