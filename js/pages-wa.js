@@ -72,7 +72,7 @@ const WA = {
 
   // ---------- Konfigurasi (Super Admin) ----------
   async konfig() {
-    const c = this.cfg = await Api.post('notifConfig', {});
+    const c = this.cfg = await Api.post('notifConfig', {}), lp = this.lp = await Api.post('laporanAbsenKonfig', {});
     const chk = (ok, t, id) => '<div class="chk ' + (ok ? 'ok' : '') + '"' + (id ? ' id="' + id + '"' : '') + '>' + ic(ok ? 'check_circle' : 'radio_button_unchecked') + '<span>' + t + '</span></div>';
     $('#waBody').innerHTML = '<div class="stack"><div class="card"><h2>' + ic('checklist') + 'Kesiapan Notifikasi WhatsApp</h2><div style="margin-top:10px">' + chk(c.adaToken, 'Token Fonnte terisi') + chk(true, 'Perangkat Fonnte terhubung (klik <b>Cek Perangkat</b> di bawah)', 'chkDev').replace('check_circle', 'help').replace('chk ok', 'chk') + chk(c.triggerAktif, 'Trigger pengirim antrean 1 menit aktif') + chk(c.waAktif, 'Saklar notifikasi otomatis AKTIF') + '</div><p class="small mute" style="margin-top:6px">Terkirim hari ini: <b>' + c.kirimHariIni + '</b> dari batas ' + c.batasHarian + ' pesan</p><details class="help"><summary>Panduan menghubungkan Fonnte langkah demi langkah</summary><ol><li>Buka <b>fonnte.com</b>, daftar lalu masuk ke dasbor.</li><li>Menu <b>Device</b> → <b>Add Device</b>, isi nama perangkat dan nomor WhatsApp pesantren (disarankan nomor khusus, bukan nomor pribadi).</li><li>Klik <b>Connect</b>. Di HP: WhatsApp → <b>Perangkat tertaut</b> → <b>Tautkan perangkat</b> → pindai kode QR di layar (seperti WhatsApp Web).</li><li>Di daftar device, klik <b>Token</b> pada perangkat tersebut (otomatis tersalin). Gunakan <b>token perangkat</b>, bukan token akun.</li><li>Tempel di kolom <b>Token Fonnte</b> di bawah → <b>Simpan Konfigurasi</b> → <b>Cek Perangkat</b> (harus <i>connect</i>) → <b>Kirim Tes WA</b> ke nomor Anda.</li><li>Pasang trigger (tombol <b>Pasang Trigger 1 Menit</b>), lalu geser saklar <b>AKTIF</b>.</li></ol><p class="hint">Setiap pesan memakai 1 kuota paket Fonnte (cek paket & kuota di fonnte.com). HP/nomor harus tetap tertaut. Token = kunci pengirim pesan: jangan dibagikan.</p></details></div>' +
       '<div class="card"><div class="row between wrap"><div><h2>' + ic('chat') + 'Notifikasi WhatsApp (Fonnte)</h2><p class="small mute">Pesan otomatis ke wali saat ada pembayaran, tanpa memperlambat kasir (diantre lalu dikirim).</p></div><label class="row"><b class="small" id="waSwTxt">' + (c.waAktif ? 'AKTIF' : 'NONAKTIF') + '</b><span class="switch"><input type="checkbox" id="cfAktif" data-ch="cfAktif" ' + (c.waAktif ? 'checked' : '') + '><i></i></span></label></div>' +
@@ -81,9 +81,27 @@ const WA = {
       '<div class="fg"><label class="f">Jam kirim — mulai</label><input class="inp" type="time" id="cfJamM" value="' + esc(c.jamMulai) + '"></div><div class="fg"><label class="f">Jam kirim — selesai</label><input class="inp" type="time" id="cfJamS" value="' + esc(c.jamSelesai) + '"><p class="hint">Di luar jam ini, blast & notifikasi absensi/pelanggaran ditunda. <b>Notifikasi pembayaran tetap dikirim kapan saja.</b></p></div><div class="fg"><label class="f">Batas pesan per hari</label><input class="inp num" type="number" id="cfBatas" min="20" max="5000" value="' + c.batasHarian + '"><p class="hint">Pengaman agar nomor tidak dikirimi terlalu banyak sekaligus (20–5000).</p></div></div>' +
       '<label class="row small"><input type="checkbox" class="ck" id="cfDet" ' + (c.deteksiOtomatis ? 'checked' : '') + '> Deteksi otomatis nomor kontak baru terdaftar WhatsApp</label>' +
       '<div class="acts" style="margin-top:12px"><button class="btn soft sm" data-act="cfDevice">' + ic('router', 'sm') + ' Cek Perangkat</button><button class="btn soft sm" data-act="cfTest">' + ic('send', 'sm') + ' Kirim Tes WA</button><button class="btn soft sm" data-act="cfTrig">' + ic('schedule', 'sm') + ' Pasang Trigger 1 Menit</button>' + chip(c.triggerAktif ? 'Trigger aktif' : 'Trigger belum aktif', c.triggerAktif ? 'ok' : 'warn', true) + '</div><div id="cfInfo" class="small" style="margin-top:8px"></div></div>' +
+      this.lapCard(lp) +
       '<div class="card"><h2>' + ic('rule') + 'Matriks Notifikasi Otomatis</h2><div class="tw" style="margin-top:10px"><table class="tbl" style="min-width:0"><thead><tr><th>Kejadian</th><th class="c">Kirim WA</th><th></th></tr></thead><tbody>' + c.matriks.map(m => '<tr><td><b>' + esc(m.label) + '</b><div class="small mute">' + esc(m.kode) + '</div></td><td class="c"><span class="switch"><input type="checkbox" data-ch="cfEv" data-k="' + esc(m.kode) + '" ' + (m.wa ? 'checked' : '') + '><i></i></span></td><td class="r"><button class="btn ghost sm" data-act="cfMsg" data-k="' + esc(m.kode) + '">' + ic('edit', 'sm') + ' Ubah pesan</button></td></tr>').join('') + '</tbody></table></div><p class="hint">Notifikasi absensi alpa dan pelanggaran bersifat sensitif, jadi bawaannya mati. Aktifkan sesuai kebijakan pesantren.</p></div>' +
       '<button class="btn deep block" data-act="cfSave">' + ic('save') + ' Simpan Konfigurasi</button></div>';
     this.mx = {}; c.matriks.forEach(m => { this.mx[m.kode] = { wa: m.wa, pesan: m.pesan }; });
+  },
+  grups: [],
+  lapCard(l) {
+    const g = this.grups.slice(); if (l.groupId && !g.some(x => x.id === l.groupId)) g.unshift({ id: l.groupId, name: l.groupName || l.groupId });
+    return '<div class="card"><div class="row between wrap"><div><h2>' + ic('groups') + 'Laporan Kehadiran Harian ke Grup WhatsApp</h2><p class="small mute">Rekap hadir / izin / sakit / alpa per kelas dikirim otomatis ke satu grup (mis. grup pengurus atau ustadz) setiap hari.</p></div><label class="row"><b class="small" id="lpSwTxt">' + (l.aktif ? 'AKTIF' : 'NONAKTIF') + '</b><span class="switch"><input type="checkbox" id="lpAktif" data-ch="lpAktif" ' + (l.aktif ? 'checked' : '') + '><i></i></span></label></div>' +
+      '<details class="help"><summary>Cara menyiapkan grup</summary><ol><li>Masukkan <b>nomor WhatsApp pesantren</b> (yang tertaut di Fonnte) ke grup tujuan sebagai anggota.</li><li>Klik <b>Perbarui daftar dari WhatsApp</b> (cukup sekali, atau saat nomor baru masuk grup baru), lalu pilih grup.</li><li>Atur jam kirim (setelah absensi biasanya selesai), pilih sesi, lalu <b>Simpan</b>.</li><li>Uji dengan <b>Kirim laporan hari ini sekarang</b> (pastikan sudah ada absensi hari ini).</li></ol><p class="hint">Pengiriman mengikuti saklar notifikasi, jam kirim, dan batas harian di atas. Laporan tidak dikirim bila hari itu belum ada data absensi.</p></details>' +
+      '<div class="fgrid c2" style="margin-top:12px"><div class="fg full"><label class="f">Grup tujuan</label><div class="row wrap" style="gap:.5rem"><select class="inp grow" id="lpGrup" data-ch="lpGrup" style="min-width:200px"><option value="">— pilih grup —</option>' + g.map(x => '<option value="' + esc(x.id) + '" data-n="' + esc(x.name) + '" ' + (x.id === l.groupId ? 'selected' : '') + '>' + esc(x.name) + '</option>').join('') + '</select><button class="btn soft sm" data-act="lpAmbil">' + ic('list', 'sm') + ' Ambil daftar</button><button class="btn soft sm" data-act="lpPerbarui">' + ic('sync', 'sm') + ' Perbarui dari WhatsApp</button></div></div>' +
+      '<div class="fg"><label class="f">ID grup</label><input class="inp" id="lpGid" value="' + esc(l.groupId) + '" placeholder="120363xxxxxxxxx@g.us"></div><div class="fg"><label class="f">Nama grup (catatan)</label><input class="inp" id="lpGnama" value="' + esc(l.groupName) + '"></div>' +
+      '<div class="fg"><label class="f">Jam kirim harian</label><input class="inp" type="time" id="lpJam" value="' + esc(l.jam) + '"></div><div class="fg"><label class="f">Sesi yang dilaporkan</label><div class="row wrap" style="gap:.8rem">' + l.sesiTersedia.map(s => '<label class="row small"><input type="checkbox" class="ck lpSesi" value="' + esc(s) + '" ' + (!l.sesi.length || l.sesi.indexOf(s) >= 0 ? 'checked' : '') + '> ' + esc(s) + '</label>').join('') + '</div></div></div>' +
+      '<label class="row small"><input type="checkbox" class="ck" id="lpRinci" ' + (l.rinci ? 'checked' : '') + '> Sertakan nama santri yang tidak hadir</label><p class="hint">Nama dan status kehadiran anak adalah data pribadi: pastikan grup hanya berisi pengurus/ustadz yang berkepentingan.</p>' +
+      '<div class="acts" style="margin-top:10px"><button class="btn deep sm" data-act="lpSimpan">' + ic('save', 'sm') + ' Simpan</button><button class="btn soft sm" data-act="lpKirim">' + ic('send', 'sm') + ' Kirim laporan hari ini sekarang</button>' + (l.terakhir ? chip('Terakhir otomatis: ' + fmtTgl(l.terakhir), 'gray') : '') + '</div></div>';
+  },
+  applyGrups(r) {
+    if (!r.ok) { toast(r.pesan, 'error'); return; }
+    this.grups = r.grup; const s = $('#lpGrup'), cur = $('#lpGid').value;
+    s.innerHTML = '<option value="">— pilih grup —</option>' + r.grup.map(x => '<option value="' + esc(x.id) + '" data-n="' + esc(x.name) + '" ' + (x.id === cur ? 'selected' : '') + '>' + esc(x.name) + '</option>').join('');
+    toast(r.grup.length + ' grup ditemukan. Pilih grup tujuan.', 'success');
   },
   async simpan(btn) {
     const body = { waAktif: $('#cfAktif').checked, token: $('#cfToken').value, jeda: $('#cfJeda').value, batchDefault: Number($('#cfBatch').value), appUrl: $('#cfUrl').value, deteksiOtomatis: $('#cfDet').checked, jamMulai: $('#cfJamM').value, jamSelesai: $('#cfJamS').value, batasHarian: Number($('#cfBatas').value), matriks: this.mx };
@@ -213,3 +231,21 @@ INP.crmFile = async el => {
   } catch (e) { out.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; }
 };
 ACT.crmExport = el => busy(el, async () => { const r = await Api.post('crmExport', Object.assign({}, Crm.f)); if (!r.length) { toast('Tidak ada data.', 'error'); return; } await exportXlsx('kontak-crm-' + todayStr() + '.xlsx', 'Kontak', r); });
+
+// ---------- Laporan kehadiran ke grup ----------
+INP.lpAktif = el => { $('#lpSwTxt').textContent = el.checked ? 'AKTIF' : 'NONAKTIF'; };
+INP.lpGrup = el => { const o = el.options[el.selectedIndex]; $('#lpGid').value = el.value; $('#lpGnama').value = o && o.dataset ? (o.dataset.n || '') : ''; };
+ACT.lpAmbil = el => busy(el, async () => { WA.applyGrups(await Api.post('waGrupDaftar', {})); });
+ACT.lpPerbarui = async el => {
+  if (!await confirmBox('Perbarui daftar grup dari WhatsApp? Lakukan <b>hanya sekali</b> atau saat nomor pesantren baru bergabung ke grup baru. Pemanggilan berlebihan dapat membuat nomor dibatasi.', 'Ya, perbarui')) return;
+  busy(el, async () => { WA.applyGrups(await Api.post('waGrupDaftar', { perbarui: true })); });
+};
+ACT.lpSimpan = el => busy(el, async () => {
+  await Api.post('laporanAbsenSimpan', { aktif: $('#lpAktif').checked, groupId: $('#lpGid').value.trim(), groupName: $('#lpGnama').value.trim(), jam: $('#lpJam').value, sesi: $$('.lpSesi').filter(c => c.checked).map(c => c.value), rinci: $('#lpRinci').checked });
+  toast('Pengaturan laporan kehadiran disimpan.', 'success'); WA.konfig();
+});
+ACT.lpKirim = el => busy(el, async () => {
+  const r = await Api.post('laporanAbsenKirim', {});
+  toast('Laporan diantre (' + r.pesan + ' pesan) ke grup ' + r.grup + '.', 'success'); kickNotif(r.pesan);
+  Modal.open(mHead('Pratinjau laporan terkirim', r.grup) + '<div class="wa-bubble">' + esc(r.contoh) + '</div><div class="mf"><button class="btn deep" data-act="close">Tutup</button></div>');
+});

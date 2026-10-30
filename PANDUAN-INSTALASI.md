@@ -127,6 +127,34 @@ Tabel seluruh santri × tiap pekan (maks. 6 bulan): ✓ lunas, ✗ menunggak, �
 ### Keamanan tambahan
 Teks isian yang berawalan `=`, `+`, `-`, `@` kini tidak lagi dieksekusi sebagai rumus Google Sheets.
 
+## Fitur v3.3: Laporan kehadiran harian otomatis ke grup WhatsApp
+
+Rekap absensi per kelas (hadir / izin / sakit / alpa, beserta nama yang tidak hadir) dikirim otomatis ke **satu grup WhatsApp** (mis. grup pengurus/ustadz) setiap hari.
+
+**Contoh isi pesan**
+```
+*LAPORAN KEHADIRAN SANTRI*
+Pesantren Musholla Hidayatus Sibyan Bades
+Kamis, 29 Oktober 2026 — Sesi Subuh
+
+*Ula* (3 santri): Hadir 1 · Izin 0 · Sakit 1 · Alpa 1
+   Alpa: Siti Aminah
+   Sakit: Budi Santoso
+
+*Total*: Hadir 1 · Izin 0 · Sakit 1 · Alpa 1
+_Belum diabsen: Wustho_
+```
+
+**Cara mengaktifkan** (Super Admin; **WhatsApp & Notifikasi → Konfigurasi → Laporan Kehadiran Harian ke Grup WhatsApp**)
+1. Pastikan **nomor WhatsApp pesantren** (yang tertaut di Fonnte) sudah **menjadi anggota grup** tujuan.
+2. Klik **Perbarui dari WhatsApp** (cukup sekali, atau saat nomor itu masuk ke grup baru) → klik **Ambil daftar** bila perlu → pilih grup.
+3. Atur **jam kirim** (pilih jam setelah absensi biasanya selesai), centang **sesi** yang dilaporkan (kosong = semua), dan pilih apakah **nama santri yang tidak hadir** disertakan.
+4. Geser saklar **AKTIF** → **Simpan**. Uji dengan **Kirim laporan hari ini sekarang** (butuh data absensi hari ini).
+- Kirim manual juga tersedia di halaman **Absensi Santri** (tombol **Kirim ke Grup WA**, untuk sesi yang sedang dipilih).
+- Syarat: notifikasi WhatsApp otomatis aktif (token terisi, saklar AKTIF). Pengiriman mengikuti **jam kirim** dan **batas pesan per hari**. Laporan yang panjang dipecah beberapa pesan.
+- Dikirim **sekali per hari**; bila hari itu belum ada satu pun data absensi, tidak ada laporan kosong yang dikirim. Kelas yang belum diabsen tertulis di akhir laporan. Jika ada koreksi absensi setelah laporan terkirim, kirim ulang manual.
+- **Privasi:** nama dan status kehadiran anak adalah data pribadi. Isi grup hanya dengan pihak yang berkepentingan, atau matikan opsi nama (laporan hanya berisi angka).
+
 ## Fitur v3.2: Pembayaran di muka (kelebihan bayar masuk ke pekan berikutnya)
 
 Bila santri membayar **lebih** dari yang jatuh tempo, kelebihannya otomatis mengisi pekan-pekan berikutnya, bulan demi bulan, sampai nominalnya habis — dan **tercentang** di matriks.
@@ -151,7 +179,7 @@ Memantau siapa yang sudah login dan membuka tagihan/kuitansi anaknya. Tabel per 
 Setelah wali login dan belum memasang aplikasi, muncul popup **"Pasang SIBYAN di HP Anda"** (sekali per sesi) dengan tombol **Pasang Sekarang** (Android/Chrome langsung memunculkan dialog pasang; iPhone/lainnya menampilkan langkah manual), **Nanti saja** (muncul lagi 7 hari kemudian) dan **Jangan tampilkan lagi**. Tidak muncul bila aplikasi sudah dipasang.
 
 ### Pembaruan otomatis & pemeriksa versi
-- Semua berkas diberi nomor versi (`?v=3.2.0`) dan service worker selalu memeriksa pembaruan ke server, sehingga versi baru tidak lagi tertahan di cache. Bila ada versi baru, muncul banner **"Muat ulang sekarang"**.
+- Semua berkas diberi nomor versi (`?v=3.3.0`) dan service worker selalu memeriksa pembaruan ke server, sehingga versi baru tidak lagi tertahan di cache. Bila ada versi baru, muncul banner **"Muat ulang sekarang"**.
 - Bila server Apps Script masih versi lama, admin melihat banner kuning beserta caranya memperbarui. Versi tampil di sidebar (Aplikasi vX · Server vY).
 - **`cek.html`** (buka `alamat-situs/cek.html`) adalah pemeriksa mandiri: mengecek setiap berkas di GitHub Pages, versi `index.html`, versi server Apps Script, dan isi cache peramban — lalu menuliskan masalahnya dalam bahasa sederhana. Tombol **Bersihkan cache & muat ulang** tersedia di sana. Halaman ini tetap berfungsi walau aplikasi utama masih versi lama, jadi **unggah `cek.html` lebih dulu** bila menu baru tidak muncul.
 

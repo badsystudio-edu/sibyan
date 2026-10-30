@@ -22,7 +22,7 @@ const Abs = {
     const d = this.d = await Api.post('absensiGet', { tanggal: this.tanggal, sesi: this.sesi, kelas: this.kelas });
     this.st = {}; d.rows.forEach(r => { this.st[r.nis] = r.status; });
     box.innerHTML = '<div class="card tight"><div class="row wrap" style="gap:.75rem"><div><label class="f">Tanggal</label><input class="inp" type="date" max="' + todayStr() + '" value="' + this.tanggal + '" data-ch="absTgl" style="width:auto"></div><div><label class="f">Sesi / kegiatan</label><select class="inp" data-ch="absSesi" style="width:auto">' + this.sesiList().map(s => '<option ' + (s === this.sesi ? 'selected' : '') + '>' + esc(s) + '</option>').join('') + '</select></div><div><label class="f">Kelas</label><select class="inp" data-ch="absKelas" style="width:auto">' + kelasOpts(this.kelas, '', true) + '</select></div></div></div>' +
-      '<div class="card" style="margin-top:1rem"><div class="row between wrap" style="margin-bottom:8px"><div id="absCnt" class="row wrap"></div><div class="acts">' + (d.tersimpan ? chip('Tersimpan · ' + esc(d.petugas), 'ok', true) : chip('Belum disimpan', 'warn')) + '<button class="btn soft sm" data-act="absAll">' + ic('done_all', 'sm') + ' Semua Hadir</button><button class="btn deep sm" data-act="absSave">' + ic('save', 'sm') + ' Simpan Absensi</button></div></div><div id="absList"></div></div>';
+      '<div class="card" style="margin-top:1rem"><div class="row between wrap" style="margin-bottom:8px"><div id="absCnt" class="row wrap"></div><div class="acts">' + (d.tersimpan ? chip('Tersimpan · ' + esc(d.petugas), 'ok', true) : chip('Belum disimpan', 'warn')) + '<button class="btn soft sm" data-act="absAll">' + ic('done_all', 'sm') + ' Semua Hadir</button><button class="btn deep sm" data-act="absSave">' + ic('save', 'sm') + ' Simpan Absensi</button><button class="btn ghost sm" data-act="absLapor" title="Kirim rekap sesi ini ke grup WhatsApp">' + ic('send', 'sm') + ' Kirim ke Grup WA</button></div></div><div id="absList"></div></div>';
     this.draw();
   },
   draw() {
@@ -58,6 +58,7 @@ ACT.absSave = el => busy(el, async () => {
   toast('Absensi tersimpan. Hadir ' + r.hitung.H + ' · Izin ' + r.hitung.I + ' · Sakit ' + r.hitung.S + ' · Alpa ' + r.hitung.A + (r.notif ? ' · notifikasi alpa dikirim ke ' + r.notif + ' wali' : ''), 'success');
   kickNotif(r.notif); await Abs.loadInput();
 });
+ACT.absLapor = el => busy(el, async () => { const r = await Api.post('laporanAbsenKirim', { tanggal: Abs.tanggal, sesi: Abs.sesi }); toast('Rekap sesi ' + Abs.sesi + ' diantre ke grup ' + r.grup + '.', 'success'); kickNotif(r.pesan); });
 INP.rkBulan = el => { if (el.value) { Abs.rk.bulan = el.value; Abs.loadRekap(); } };
 INP.rkKelas = el => { Abs.rk.kelas = el.value; Abs.loadRekap(); };
 INP.rkSesi = el => { Abs.rk.sesi = el.value; Abs.loadRekap(); };

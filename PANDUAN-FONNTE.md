@@ -114,3 +114,11 @@ Gunakan `*teks*` untuk huruf tebal di WhatsApp. **Jangan menulis password wali d
 - Pesan notifikasi memuat nama anak dan nominal: pastikan **nomor HP wali benar** agar tidak terkirim ke orang lain.
 - Notifikasi absensi/pelanggaran bersifat sensitif — aktifkan hanya bila disepakati pengurus.
 - Kontak yang meminta berhenti ditandai **Opt-out** di CRM (blast tidak lagi dikirim; notifikasi transaksi pembayaran tetap dikirim).
+
+## 10. Mengirim ke grup WhatsApp (laporan kehadiran)
+Fonnte dapat mengirim ke grup memakai **ID grup** (berakhiran `@g.us`). Syaratnya nomor yang tertaut di Fonnte **sudah menjadi anggota grup**.
+1. Masukkan nomor pesantren ke grup tujuan.
+2. Di SIBYAN: **Konfigurasi → Laporan Kehadiran Harian ke Grup WhatsApp → Perbarui dari WhatsApp**. Tombol ini memanggil API Fonnte *update daftar grup*; menurut dokumentasi Fonnte API itu **cukup dipanggil sekali** atau saat bergabung ke grup baru, dan penyalahgunaan dapat menyebabkan pembatasan nomor — jadi jangan ditekan berulang.
+3. Klik **Ambil daftar** → pilih grup (ID terisi otomatis), atau tempel ID grup secara manual.
+4. Atur jam kirim, sesi, dan opsi nama, lalu aktifkan dan simpan.
+Pemecahan masalah: daftar grup kosong → pastikan nomor sudah di dalam grup dan perangkat *connect*, lalu perbarui daftar; pesan tidak masuk ke grup → cek tab **Antrean** (status/alasan), saklar AKTIF, jam kirim, dan batas harian.
