@@ -3,7 +3,9 @@
  * POST memakai text/plain agar tidak memicu preflight CORS.
  * ============================================================ */
 /* Versi aplikasi (samakan dengan APP_VERSI di Kode.gs, sw.js, version.json, dan ?v= di index.html) */
-const APP_VERSI = '3.3.0';
+const APP_VERSI = '3.4.0';
+const BACKEND_MIN = '3.3.0';   // versi minimal server Apps Script yang dibutuhkan aplikasi ini
+const cmpVer = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < 3; i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d > 0 ? 1 : -1; } return 0; };
 
 const Api = {
   token: localStorage.getItem('sibyan_token') || '',

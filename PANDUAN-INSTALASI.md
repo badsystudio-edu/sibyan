@@ -127,6 +127,14 @@ Tabel seluruh santri × tiap pekan (maks. 6 bulan): ✓ lunas, ✗ menunggak, �
 ### Keamanan tambahan
 Teks isian yang berawalan `=`, `+`, `-`, `@` kini tidak lagi dieksekusi sebagai rumus Google Sheets.
 
+## Fitur v3.4: Lebah terbang mengikuti pointer 🐝
+
+Lebah kecil beranimasi (sayap mengepak, badan miring dan menghadap arah gerak) terbang halus mengikuti **kursor** di komputer, atau **titik sentuh** di HP. Bila pointer diam beberapa detik, lebah berputar-putar di sekitarnya.
+- **Mematikan/menyalakan:** tombol 🐝 di pojok kanan atas beranda, atau menu pengguna (klik nama Anda) → **Lebah: Nyala/Mati**. Pilihan tersimpan per perangkat.
+- Tidak menghalangi klik, tidak ikut tercetak, dan bawaannya **mati** pada perangkat yang meminta "kurangi animasi".
+- **Hanya frontend** — tidak perlu memperbarui `Kode.gs`/server. Cukup ganti isi repo dengan ZIP (kecuali `js/config.js`) lalu `git add -A`, `git commit`, `git push`.
+- Aplikasi v3.4 cukup dengan server minimal v3.3.0; banner peringatan versi hanya muncul bila server lebih lama dari itu.
+
 ## Fitur v3.3: Laporan kehadiran harian otomatis ke grup WhatsApp
 
 Rekap absensi per kelas (hadir / izin / sakit / alpa, beserta nama yang tidak hadir) dikirim otomatis ke **satu grup WhatsApp** (mis. grup pengurus/ustadz) setiap hari.
@@ -179,7 +187,7 @@ Memantau siapa yang sudah login dan membuka tagihan/kuitansi anaknya. Tabel per 
 Setelah wali login dan belum memasang aplikasi, muncul popup **"Pasang SIBYAN di HP Anda"** (sekali per sesi) dengan tombol **Pasang Sekarang** (Android/Chrome langsung memunculkan dialog pasang; iPhone/lainnya menampilkan langkah manual), **Nanti saja** (muncul lagi 7 hari kemudian) dan **Jangan tampilkan lagi**. Tidak muncul bila aplikasi sudah dipasang.
 
 ### Pembaruan otomatis & pemeriksa versi
-- Semua berkas diberi nomor versi (`?v=3.3.0`) dan service worker selalu memeriksa pembaruan ke server, sehingga versi baru tidak lagi tertahan di cache. Bila ada versi baru, muncul banner **"Muat ulang sekarang"**.
+- Semua berkas diberi nomor versi (`?v=3.4.0`) dan service worker selalu memeriksa pembaruan ke server, sehingga versi baru tidak lagi tertahan di cache. Bila ada versi baru, muncul banner **"Muat ulang sekarang"**.
 - Bila server Apps Script masih versi lama, admin melihat banner kuning beserta caranya memperbarui. Versi tampil di sidebar (Aplikasi vX · Server vY).
 - **`cek.html`** (buka `alamat-situs/cek.html`) adalah pemeriksa mandiri: mengecek setiap berkas di GitHub Pages, versi `index.html`, versi server Apps Script, dan isi cache peramban — lalu menuliskan masalahnya dalam bahasa sederhana. Tombol **Bersihkan cache & muat ulang** tersedia di sana. Halaman ini tetap berfungsi walau aplikasi utama masih versi lama, jadi **unggah `cek.html` lebih dulu** bila menu baru tidak muncul.
 

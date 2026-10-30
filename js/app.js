@@ -97,7 +97,7 @@ window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); window
 ACT.userMenu = el => {
   const old = $('.menu'); if (old) { old.remove(); return; }
   const m = document.createElement('div'); m.className = 'menu';
-  m.innerHTML = '<button data-act="akunSaya">' + ic('manage_accounts') + ' Akun Saya</button>' + (App.isAdm() ? '<button data-act="goPub">' + ic('travel_explore') + ' Portal Publik</button>' : '') +
+  m.innerHTML = '<button data-act="akunSaya">' + ic('manage_accounts') + ' Akun Saya</button><button data-act="lebahToggle"><span style="width:20px;text-align:center">🐝</span> Lebah: ' + (Lebah.on ? 'Nyala' : 'Mati') + '</button>' + (App.isAdm() ? '<button data-act="goPub">' + ic('travel_explore') + ' Portal Publik</button>' : '') +
     (App.isSuper() ? '<button data-act="goSet">' + ic('settings') + ' Pengaturan</button>' : '') + '<button data-act="logout">' + ic('logout') + ' Keluar</button>';
   $('.topbar').appendChild(m);
 };
@@ -129,7 +129,7 @@ FRM.akun = f => busy(f.querySelector('button[type=submit]'), async () => {
 App.isStandalone = function () { try { return !!((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone); } catch (e) { return false; } };
 App.backendVersi = '';
 App.cekVersi = async function () {
-  if (Api.token) try { const p = await Api.get('ping', {}); this.backendVersi = p.versi || 'lama'; const e = $('#srvVer'); if (e) e.textContent = this.backendVersi; if (p.versi !== APP_VERSI) this.versiMsg = 'Server Apps Script masih versi <b>' + esc(this.backendVersi) + '</b> sedangkan aplikasi <b>v' + APP_VERSI + '</b>. Fitur baru bisa error sampai <b>Kode.gs</b> terbaru ditempel lalu <b>Deploy → Manage deployments → Edit → New version</b>.'; } catch (e) { }
+  if (Api.token) try { const p = await Api.get('ping', {}); this.backendVersi = p.versi || 'lama'; const e = $('#srvVer'); if (e) e.textContent = this.backendVersi; if (!p.versi || cmpVer(p.versi, BACKEND_MIN) < 0) this.versiMsg = 'Server Apps Script masih versi <b>' + esc(this.backendVersi) + '</b> sedangkan aplikasi <b>v' + APP_VERSI + '</b> butuh server minimal <b>v' + BACKEND_MIN + '</b>. Fitur baru bisa error sampai <b>Kode.gs</b> terbaru ditempel lalu <b>Deploy → Manage deployments → Edit → New version</b>.'; } catch (e) { }
   try { const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' }), v = await r.json(); if (v.versi && v.versi !== APP_VERSI) this.updateMsg = 'Versi aplikasi <b>v' + esc(v.versi) + '</b> tersedia.'; } catch (e) { }
   this.paintBanner();
 };
@@ -172,6 +172,7 @@ ACT.pwaTolak = () => { localStorage.setItem('sibyan_pwa_tolak', '1'); Modal.clos
     navigator.serviceWorker.register('sw.js?v=' + APP_VERSI).catch(() => { });
     navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !done) { done = true; location.reload(); } });   // pembaruan aplikasi dimuat otomatis
   }
+  Lebah.init();
   if (!Api.configured) {
     $('#app').innerHTML = '<div class="wrap" style="max-width:560px;padding-top:3rem"><div class="card"><h2>Konfigurasi belum lengkap</h2><p class="mute" style="margin:8px 0">Buka berkas <b>js/config.js</b> lalu isi <b>GAS_URL</b> dengan URL Web App (berakhiran /exec) dari Google Apps Script, kemudian muat ulang halaman ini.</p></div></div>';
     return;
