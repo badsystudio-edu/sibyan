@@ -29,10 +29,10 @@
   <div class="card"><h2>4. Peramban (cache &amp; service worker)</h2><div id="brw"></div></div>
 </main>
 <script>
-const EXPECT = '3.4.0';
+const EXPECT = '3.5.0';
 const SERVER_MIN = '3.3.0';
 const cmp=(a,b)=>{const x=String(a).split('.').map(Number),y=String(b).split('.').map(Number);for(let i=0;i<3;i++){const d=(x[i]||0)-(y[i]||0);if(d)return d>0?1:-1}return 0};
-const FILES = ['index.html','css/style.css','js/config.js','js/api.js','js/ui.js','js/pages-public.js','js/pages-admin.js','js/pages-santri.js','js/pages-keuangan.js','js/pages-laporan.js','js/pages-absensi.js','js/pages-berita.js','js/pages-wa.js','js/pages-aktivitas.js','js/pages-wali.js','js/lebah.js','js/app.js','sw.js','version.json','manifest.json'];
+const FILES = ['index.html','css/style.css','js/config.js','js/api.js','js/ui.js','js/pages-public.js','js/pages-admin.js','js/pages-santri.js','js/pages-keuangan.js','js/pages-laporan.js','js/pages-absensi.js','js/pages-berita.js','js/pages-wa.js','js/pages-aktivitas.js','js/pages-wali.js','js/lebah.js','js/kereta.js','js/app.js','sw.js','version.json','manifest.json'];
 const $=s=>document.querySelector(s);
 const row=(st,t,sub)=>'<div class="row"><span class="ic '+st+'">'+({ok:'✓',bad:'✗',wait:'…'})[st]+'</span><div>'+t+(sub?'<div class="mute">'+sub+'</div>':'')+'</div></div>';
 const nocache=u=>fetch(u+(u.includes('?')?'&':'?')+'t='+Date.now(),{cache:'no-store'});
@@ -59,7 +59,7 @@ async function run(){
   else{
     s+=row('ok','GAS_URL terisi',mm[1].slice(0,60)+'…');
     try{const r=await fetch(mm[1]+'?action=ping&data=%7B%7D',{cache:'no-store'});const j=await r.json();
-      if(j.success){const ver=j.data.versi;const ok=!!ver&&cmp(ver,SERVER_MIN)>=0;s+=row(ok?'ok':'bad','Server menjawab. Versi server: '+(ver?'v'+ver:'LAMA (belum punya nomor versi)'),ok?'Fitur server: '+(j.data.fitur||[]).join(', '):'diperlukan minimal v'+SERVER_MIN);if(!ok)problems.push('<b>Server Apps Script masih versi lama.</b> Tempel isi Kode-gs.txt terbaru ke Kode.gs → jalankan <code>pasangTrigger</code> → <b>Deploy → Manage deployments → ✏ Edit → Version: New version → Deploy</b>.')}
+      if(j.success){const ver=j.data.versi;const ok=!!ver&&cmp(ver,SERVER_MIN)>=0;s+=row(ok?'ok':'bad','Server menjawab. Versi server: '+(ver?'v'+ver:'LAMA (belum punya nomor versi)'),ok?'Fitur server: '+(j.data.fitur||[]).join(', '):'diperlukan minimal v'+SERVER_MIN);if(ok&&cmp(ver,'3.5.0')<0)s+=row('wait','Disarankan memperbarui Kode.gs ke v3.5.0','Lebih cepat dan jauh lebih jarang galat sesaat saat pindah menu (server hemat panggilan ke Google).');if(!ok)problems.push('<b>Server Apps Script masih versi lama.</b> Tempel isi Kode-gs.txt terbaru ke Kode.gs → jalankan <code>pasangTrigger</code> → <b>Deploy → Manage deployments → ✏ Edit → Version: New version → Deploy</b>.')}
       else{s+=row('bad','Server menjawab error: '+(j.message||'?'));problems.push('Server menjawab error: '+(j.message||''))}}
     catch(e){s+=row('bad','Tidak dapat menghubungi server','Periksa URL /exec, dan pengaturan deploy: Execute as <b>Me</b>, akses <b>Anyone</b>.');problems.push('Server tidak dapat dihubungi. Periksa GAS_URL dan pengaturan deploy (Anyone).')}
   }

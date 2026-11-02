@@ -8,7 +8,7 @@ const Pub = {
   header() {
     const u = Api.user;
     return '<header class="pub-head"><div class="in"><a class="brand" href="#/"><img src="' + logoSrc() + '" alt=""><div><b>SIBYAN</b><small>' + esc(App.name()) + '</small></div></a><span class="grow"></span>' +
-      '<button class="btn ghost icon sm" data-act="lebahToggle" title="Lebah nyala/mati" aria-label="Lebah nyala atau mati">🐝</button>' + (u ? '<a class="btn deep sm" href="#' + App.homeOf(u) + '">' + ic('dashboard') + ' Dasbor</a>' : '<a class="btn deep sm" href="#/login">' + ic('person') + ' Masuk Portal</a>') + '</div></header>';
+      '<button class="btn ghost icon sm" data-act="keretaSet" title="Kereta api & suara" aria-label="Pengaturan kereta api">🚂</button><button class="btn ghost icon sm" data-act="lebahToggle" title="Lebah nyala/mati" aria-label="Lebah nyala atau mati">🐝</button>' + (u ? '<a class="btn deep sm" href="#' + App.homeOf(u) + '">' + ic('dashboard') + ' Dasbor</a>' : '<a class="btn deep sm" href="#/login">' + ic('person') + ' Masuk Portal</a>') + '</div></header>';
   },
 
   loginForm() {

@@ -269,9 +269,17 @@ details.help{background:var(--subtle);border-radius:1rem;padding:10px 14px;margi
 #lebah .w{transform-box:fill-box;transform-origin:50% 100%;animation:lbflap .085s ease-in-out infinite alternate}
 #lebah .w2{animation-delay:-.04s}
 @keyframes lbflap{from{transform:scaleY(1)}to{transform:scaleY(.22)}}
+/* ---------- Kereta api ---------- */
+#kereta{position:fixed;left:0;z-index:9000;pointer-events:none;will-change:transform}
+#kereta .kr-in{width:100%;height:100%}#kereta svg{display:block;overflow:visible;filter:drop-shadow(0 5px 3px rgba(15,23,42,.28))}
+#kereta .wh{transform-box:fill-box;transform-origin:center;animation:krspin .6s linear infinite}
+@keyframes krspin{to{transform:rotate(360deg)}}
+#kereta-rel{position:fixed;left:0;right:0;height:6px;z-index:8998;pointer-events:none;opacity:0;border-top:2px solid #6b7280;background:repeating-linear-gradient(90deg,#92400e 0 7px,transparent 7px 24px) 0 3px/100% 3px no-repeat}
+.kr-puff{position:fixed;width:calc(16px * var(--s,1));height:calc(16px * var(--s,1));border-radius:50%;background:radial-gradient(circle,#fff 0%,rgba(235,238,242,.9) 55%,rgba(235,238,242,0) 75%);pointer-events:none;z-index:8999;animation:krpuff 2s ease-out forwards}
+@keyframes krpuff{from{transform:translate(-50%,-50%) scale(.5);opacity:.9}to{transform:translate(calc(-50% + var(--dx)),calc(-50% - 80px)) scale(3.4);opacity:0}}
 /* ---------- Cetak ---------- */
 @media print{
-  #lebah{display:none!important}
+  #lebah,#kereta,#kereta-rel,.kr-puff{display:none!important}
   body>*:not(#print-root){display:none!important}
   #print-root{display:block!important}
   body{background:#fff}

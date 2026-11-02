@@ -5,7 +5,7 @@ async function ensureFotos(list) {
   const need = list.filter(n => !(n in Foto.m));
   for (let i = 0; i < need.length; i += 12) {
     const part = need.slice(i, i + 12);
-    try { const r = await Api.post('getFoto', { nisList: part }); part.forEach(n => { Foto.m[n] = r[n] || ''; }); } catch (e) { part.forEach(n => { Foto.m[n] = ''; }); }
+    try { const r = await Api.post('getFoto', { nisList: part }, { keep: true }); part.forEach(n => { Foto.m[n] = r[n] || ''; }); } catch (e) { part.forEach(n => { Foto.m[n] = ''; }); }
   }
 }
 function waRemind(it) {

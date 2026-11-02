@@ -127,6 +127,25 @@ Tabel seluruh santri × tiap pekan (maks. 6 bulan): ✓ lunas, ✗ menunggak, �
 ### Keamanan tambahan
 Teks isian yang berawalan `=`, `+`, `-`, `@` kini tidak lagi dieksekusi sebagai rumus Google Sheets.
 
+## Fitur v3.5: Kereta api 🚂 + perbaikan galat saat pindah menu
+
+### Kereta api lengkap dengan gerbong & suara
+Kereta uap (lokomotif + tender + gerbong berwarna) melintas di dasar layar: roda berputar, asap mengepul dari cerobong, rel tampak sebentar lalu hilang. Arah lintasan bergantian kanan–kiri.
+- **Mengatur:** klik tombol 🚂 di pojok kanan atas beranda, atau menu pengguna (klik nama Anda) → **Kereta api & suara…**. Yang bisa diatur: nyala/mati; **sekali lewat setiap … detik** (bawaan 60 = 1 menit; ada pintasan 30 dtk / 1 / 2 / 5 / 10 menit); lama melintas (6–40 detik); jumlah gerbong (1–8); suara nyala/mati; **volume**. Tombol **Lewatkan sekarang** untuk uji, **Tes suara** untuk mendengar peluit & desis uap.
+- **Suara** dibuat langsung oleh peramban (tanpa berkas audio): gemuruh roda, ketukan sambungan rel, desis uap "cuh-cuh", dan peluit "tuut-tuut". Suara makin keras saat kereta mendekat, berpindah kiri–kanan sesuai posisi kereta, dan nada peluit sedikit turun saat menjauh.
+- **Penting — izin suara peramban:** Chrome/Safari hanya mengizinkan suara setelah pengguna **mengetuk/mengklik layar sekali**. Sebelum itu kereta tetap lewat tetapi senyap, dengan pesan "Ketuk layar sekali untuk mengaktifkan suara kereta".
+- Pengaturan **tersimpan per perangkat**. Tidak ikut tercetak, tidak menghalangi klik, dan bawaannya **mati** pada perangkat yang meminta "kurangi animasi". Pada layar kecil kereta diperkecil dan diletakkan di atas bilah menu bawah.
+- **Hanya frontend** — tidak perlu memperbarui server untuk fitur ini.
+
+### Perbaikan: "kadang error saat pindah menu, setelah refresh normal"
+Penyebab yang ditemukan dan sudah diperbaiki:
+1. **Balapan antar-halaman.** Bila Anda berpindah menu sebelum halaman sebelumnya selesai memuat (server Google kadang butuh beberapa detik), hasil/galat halaman lama bisa menimpa halaman baru. Sekarang setiap pindah menu diberi nomor navigasi; hasil dan galat halaman lama otomatis dibuang. *Terbukti: uji simulasi yang meniru kejadian ini gagal pada versi lama dan lulus pada versi ini.*
+2. **Gangguan sesaat dari Google** (jawaban error HTML, "sedang sibuk", batas panggilan). Pembacaan data kini **diulang otomatis sampai 3 kali** dengan jeda. Penyimpanan/pembayaran sengaja **tidak** diulang agar tidak tercatat ganda.
+3. **Pesan galat yang jelas.** Bila ada kesalahan tampilan, muncul penjelasan sederhana dengan tombol **Coba lagi** dan **Perbarui & muat ulang** (membersihkan cache), bukan pesan teknis.
+4. **Server lebih hemat (Kode.gs v3.5.0).** Sebelumnya satu permintaan bisa memanggil layanan properti/spreadsheet Google puluhan sampai ratusan kali — penyebab lambat dan galat sesaat. Sekarang dihemat per permintaan (mis. dasbor: ±2 pembacaan properti). Galat kuota Google dipetakan ke pesan ramah "Server sedang sibuk, coba lagi".
+   - Menjalankan v3.5 frontend tidak memaksa memperbarui server, tetapi **sangat disarankan**: tempel `Kode-gs.txt` terbaru → **Deploy → Manage deployments → Edit → New version → Deploy**.
+- Bila masih ada galat sesekali: buka `cek.html` untuk memeriksa apakah ada berkas campuran versi lama–baru, lalu **Bersihkan cache & muat ulang aplikasi**.
+
 ## Fitur v3.4: Lebah terbang mengikuti pointer 🐝
 
 Lebah kecil beranimasi (sayap mengepak, badan miring dan menghadap arah gerak) terbang halus mengikuti **kursor** di komputer, atau **titik sentuh** di HP. Bila pointer diam beberapa detik, lebah berputar-putar di sekitarnya.
@@ -187,7 +206,7 @@ Memantau siapa yang sudah login dan membuka tagihan/kuitansi anaknya. Tabel per 
 Setelah wali login dan belum memasang aplikasi, muncul popup **"Pasang SIBYAN di HP Anda"** (sekali per sesi) dengan tombol **Pasang Sekarang** (Android/Chrome langsung memunculkan dialog pasang; iPhone/lainnya menampilkan langkah manual), **Nanti saja** (muncul lagi 7 hari kemudian) dan **Jangan tampilkan lagi**. Tidak muncul bila aplikasi sudah dipasang.
 
 ### Pembaruan otomatis & pemeriksa versi
-- Semua berkas diberi nomor versi (`?v=3.4.0`) dan service worker selalu memeriksa pembaruan ke server, sehingga versi baru tidak lagi tertahan di cache. Bila ada versi baru, muncul banner **"Muat ulang sekarang"**.
+- Semua berkas diberi nomor versi (`?v=3.5.0`) dan service worker selalu memeriksa pembaruan ke server, sehingga versi baru tidak lagi tertahan di cache. Bila ada versi baru, muncul banner **"Muat ulang sekarang"**.
 - Bila server Apps Script masih versi lama, admin melihat banner kuning beserta caranya memperbarui. Versi tampil di sidebar (Aplikasi vX · Server vY).
 - **`cek.html`** (buka `alamat-situs/cek.html`) adalah pemeriksa mandiri: mengecek setiap berkas di GitHub Pages, versi `index.html`, versi server Apps Script, dan isi cache peramban — lalu menuliskan masalahnya dalam bahasa sederhana. Tombol **Bersihkan cache & muat ulang** tersedia di sana. Halaman ini tetap berfungsi walau aplikasi utama masih versi lama, jadi **unggah `cek.html` lebih dulu** bila menu baru tidak muncul.
 

@@ -3,7 +3,7 @@
  * POST memakai text/plain agar tidak memicu preflight CORS.
  * ============================================================ */
 /* Versi aplikasi (samakan dengan APP_VERSI di Kode.gs, sw.js, version.json, dan ?v= di index.html) */
-const APP_VERSI = '3.4.0';
+const APP_VERSI = '3.5.0';
 const BACKEND_MIN = '3.3.0';   // versi minimal server Apps Script yang dibutuhkan aplikasi ini
 const cmpVer = (a, b) => { const x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (let i = 0; i < 3; i++) { const d = (x[i] || 0) - (y[i] || 0); if (d) return d > 0 ? 1 : -1; } return 0; };
 
@@ -32,15 +32,28 @@ const Api = {
   },
   onAuthFail: null,
 
+  /* Pembacaan (list/get/laporan) aman diulang; penulisan (simpan/bayar/hapus) TIDAK diulang agar tidak ganda. */
+  READ_RE: /^(list|get|report$|tunggakan$|dashboard$|sppGrid$|iuranOverview$|absensiGet$|absensiRekap$|absensiSantri$|pelanggaranList$|pelanggaranSantri$|beritaList$|bukuSpp$|matriks$|aktivitasWali$|bootstrap$|notifConfig$|notifQueue$|waAudience$|waBlastList$|waGrupDaftar$|waDevice$|crmList$|crmStats$|crmDetail$|auditList$|laporanAbsenKonfig$|public|ping$)/,
+  isRead(action) { return this.READ_RE.test(action); },
+  _ep() { return (typeof App !== 'undefined' && App.epoch) || 0; },
+  _stale() { const e = new Error(''); e.stale = true; return e; },
+
   async _fetch(url, opts, tries) {
-    const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 55000);
-    try {
-      const res = await fetch(url, Object.assign({ signal: ctl.signal, redirect: 'follow' }, opts));
-      return await res.json();
-    } catch (e) {
-      if (tries > 1 && !opts.method) return this._fetch(url, opts, tries - 1);   // GET aman diulang; POST tidak
-      throw new Error(e.name === 'AbortError' ? 'Server terlalu lama merespons. Coba lagi.' : 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
-    } finally { clearTimeout(t); }
+    let lastErr = null;
+    for (let i = 1; i <= tries; i++) {
+      const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 55000);
+      try {
+        const res = await fetch(url, Object.assign({ signal: ctl.signal, redirect: 'follow' }, opts));
+        const txt = await res.text(); let j = null; try { j = JSON.parse(txt); } catch (e) { j = null; }
+        if (j && !(j.success === false && j.code === 'BUSY' && i < tries)) return j;     // jawaban sah (atau sibuk tapi sudah percobaan terakhir)
+        lastErr = new Error(j ? (j.message || 'Server sibuk.') : 'Server Google mengirim jawaban tak terduga (biasanya sedang sibuk). Coba lagi.');
+        if (j) { lastErr.code = j.code; if (i >= tries) return j; }
+      } catch (e) {
+        lastErr = new Error(e.name === 'AbortError' ? 'Server terlalu lama merespons. Coba lagi.' : 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda.');
+      } finally { clearTimeout(t); }
+      if (i < tries) await new Promise(r => setTimeout(r, 700 * i + Math.random() * 400));   // jeda lalu coba lagi
+    }
+    throw lastErr || new Error('Tidak dapat terhubung ke server.');
   },
   _unwrap(j) {
     if (!j || j.success !== true) {
@@ -52,16 +65,22 @@ const Api = {
     }
     return j.data;
   },
-  async get(action, data) {
+  /* opt.keep = true: hasil tetap dipakai walau pengguna sudah pindah halaman (mis. foto, cek versi). */
+  async get(action, data, opt) {
     if (!this.configured) throw new Error('GAS_URL belum diisi di js/config.js');
-    const u = GAS_URL + '?action=' + encodeURIComponent(action) + '&data=' + encodeURIComponent(JSON.stringify(data || {}));
-    return this._unwrap(await this._fetch(u, {}, 2));
+    const ep = this._ep(), u = GAS_URL + '?action=' + encodeURIComponent(action) + '&data=' + encodeURIComponent(JSON.stringify(data || {}));
+    const r = this._unwrap(await this._fetch(u, {}, 3));
+    if (!(opt && opt.keep) && ep !== this._ep()) throw this._stale();     // halaman sudah berganti: buang hasil lama agar tidak menimpa tampilan baru
+    return r;
   },
-  async post(action, data) {
+  async post(action, data, opt) {
     if (!this.configured) throw new Error('GAS_URL belum diisi di js/config.js');
-    return this._unwrap(await this._fetch(GAS_URL, {
+    const ep = this._ep(), baca = this.isRead(action);
+    const r = this._unwrap(await this._fetch(GAS_URL, {
       method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({ action: action, token: this.token, data: Object.assign({}, data || {}, { _c: this.ctx() }) })
-    }, 1));
+    }, baca ? 3 : 1));
+    if (baca && !(opt && opt.keep) && ep !== this._ep()) throw this._stale();
+    return r;
   }
 };

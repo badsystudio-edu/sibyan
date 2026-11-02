@@ -2,7 +2,7 @@
  * APP — boot, router (hash), shell admin & wali, akun saya
  * ============================================================ */
 const App = {
-  info: null, cfg: null, shell: '', online: true,
+  info: null, cfg: null, shell: '', online: true, epoch: 0,
   name() { return (this.cfg && this.cfg.settings.nama) || (this.info && this.info.nama) || APP_CFG.namaDefault; },
   alamat() { return (this.cfg && this.cfg.settings.alamat) || (this.info && this.info.alamat) || ''; },
   homeOf(u) { return u.peran === 'wali' ? '/wali/tagihan' : '/admin/dashboard'; },
@@ -32,6 +32,7 @@ const App = {
     return { path: (i < 0 ? h : h.slice(0, i)).replace(/^\/|\/$/g, ''), params: new URLSearchParams(i < 0 ? '' : h.slice(i + 1)) };
   },
   async route() {
+    const ep = ++this.epoch;   // nomor navigasi: hasil/galat dari halaman sebelumnya diabaikan bila sudah berpindah
     Modal.closeAll(); Adm.destroyCharts(); if (typeof WA !== 'undefined') clearInterval(WA.timer);
     const { path, params } = this.parse(), u = Api.user;
     const R = {
@@ -53,8 +54,18 @@ const App = {
     if (needAdm || needWali) {
       this.mountShell(needAdm ? 'admin' : 'wali', path);
       $('#view').innerHTML = skel(3, 110);
-      try { await R[path](); if (needWali) setTimeout(() => this.promptPwa(), 1200); } catch (e) { if (e.code !== 'AUTH') $('#view').innerHTML = '<div class="card">' + emptyBox('error', e.message) + '<div class="center"><button class="btn ghost" onclick="App.route()">Coba lagi</button></div></div>'; }
-    } else { this.shell = ''; await R[path](); }
+      try { await R[path](); if (needWali && ep === this.epoch) setTimeout(() => this.promptPwa(), 1200); } catch (e) { if (ep === this.epoch) this.routeError(e); }
+    } else { this.shell = ''; try { await R[path](); } catch (e) { if (ep === this.epoch && !e.stale) { console.error(e); toast(e.message || 'Terjadi kesalahan', 'error'); } } }
+  },
+  /* Tampilkan galat halaman dengan bahasa yang jelas + tombol pemulihan. Hanya dipanggil untuk navigasi TERBARU. */
+  routeError(e) {
+    if (!e || e.stale || e.code === 'AUTH') return;
+    console.error(e);
+    const v = $('#view'); if (!v) return;
+    const kode = e instanceof ReferenceError || e instanceof TypeError || e instanceof SyntaxError;
+    v.innerHTML = '<div class="card">' + emptyBox('error', kode ? 'Tampilan belum termuat dengan benar. Biasanya karena berkas aplikasi sedang diperbarui atau koneksi terputus sesaat.' : (e.message || 'Terjadi kesalahan.')) +
+      (kode ? '<p class="small mute center" style="margin-bottom:10px">Rincian teknis: ' + esc(e.message || '') + '</p>' : '') +
+      '<div class="center row" style="justify-content:center;gap:.5rem"><button class="btn deep" onclick="App.route()">Coba lagi</button>' + (kode ? '<button class="btn ghost" data-act="appReload">Perbarui & muat ulang</button>' : '') + '</div></div>';
   },
   go(p) { if (location.hash === '#' + p) this.route(); else location.hash = '#' + p; },
 
@@ -97,7 +108,7 @@ window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); window
 ACT.userMenu = el => {
   const old = $('.menu'); if (old) { old.remove(); return; }
   const m = document.createElement('div'); m.className = 'menu';
-  m.innerHTML = '<button data-act="akunSaya">' + ic('manage_accounts') + ' Akun Saya</button><button data-act="lebahToggle"><span style="width:20px;text-align:center">🐝</span> Lebah: ' + (Lebah.on ? 'Nyala' : 'Mati') + '</button>' + (App.isAdm() ? '<button data-act="goPub">' + ic('travel_explore') + ' Portal Publik</button>' : '') +
+  m.innerHTML = '<button data-act="akunSaya">' + ic('manage_accounts') + ' Akun Saya</button><button data-act="lebahToggle"><span style="width:20px;text-align:center">🐝</span> Lebah: ' + (Lebah.on ? 'Nyala' : 'Mati') + '</button><button data-act="keretaSet"><span style="width:20px;text-align:center">🚂</span> Kereta api & suara…</button>' + (App.isAdm() ? '<button data-act="goPub">' + ic('travel_explore') + ' Portal Publik</button>' : '') +
     (App.isSuper() ? '<button data-act="goSet">' + ic('settings') + ' Pengaturan</button>' : '') + '<button data-act="logout">' + ic('logout') + ' Keluar</button>';
   $('.topbar').appendChild(m);
 };
@@ -129,7 +140,7 @@ FRM.akun = f => busy(f.querySelector('button[type=submit]'), async () => {
 App.isStandalone = function () { try { return !!((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone); } catch (e) { return false; } };
 App.backendVersi = '';
 App.cekVersi = async function () {
-  if (Api.token) try { const p = await Api.get('ping', {}); this.backendVersi = p.versi || 'lama'; const e = $('#srvVer'); if (e) e.textContent = this.backendVersi; if (!p.versi || cmpVer(p.versi, BACKEND_MIN) < 0) this.versiMsg = 'Server Apps Script masih versi <b>' + esc(this.backendVersi) + '</b> sedangkan aplikasi <b>v' + APP_VERSI + '</b> butuh server minimal <b>v' + BACKEND_MIN + '</b>. Fitur baru bisa error sampai <b>Kode.gs</b> terbaru ditempel lalu <b>Deploy → Manage deployments → Edit → New version</b>.'; } catch (e) { }
+  if (Api.token) try { const p = await Api.get('ping', {}, { keep: true }); this.backendVersi = p.versi || 'lama'; const e = $('#srvVer'); if (e) e.textContent = this.backendVersi; if (!p.versi || cmpVer(p.versi, BACKEND_MIN) < 0) this.versiMsg = 'Server Apps Script masih versi <b>' + esc(this.backendVersi) + '</b> sedangkan aplikasi <b>v' + APP_VERSI + '</b> butuh server minimal <b>v' + BACKEND_MIN + '</b>. Fitur baru bisa error sampai <b>Kode.gs</b> terbaru ditempel lalu <b>Deploy → Manage deployments → Edit → New version</b>.'; } catch (e) { }
   try { const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' }), v = await r.json(); if (v.versi && v.versi !== APP_VERSI) this.updateMsg = 'Versi aplikasi <b>v' + esc(v.versi) + '</b> tersedia.'; } catch (e) { }
   this.paintBanner();
 };
@@ -172,7 +183,7 @@ ACT.pwaTolak = () => { localStorage.setItem('sibyan_pwa_tolak', '1'); Modal.clos
     navigator.serviceWorker.register('sw.js?v=' + APP_VERSI).catch(() => { });
     navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !done) { done = true; location.reload(); } });   // pembaruan aplikasi dimuat otomatis
   }
-  Lebah.init();
+  Lebah.init(); Kereta.init();
   if (!Api.configured) {
     $('#app').innerHTML = '<div class="wrap" style="max-width:560px;padding-top:3rem"><div class="card"><h2>Konfigurasi belum lengkap</h2><p class="mute" style="margin:8px 0">Buka berkas <b>js/config.js</b> lalu isi <b>GAS_URL</b> dengan URL Web App (berakhiran /exec) dari Google Apps Script, kemudian muat ulang halaman ini.</p></div></div>';
     return;

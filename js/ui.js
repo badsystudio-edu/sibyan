@@ -33,6 +33,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') Modal.close(
 
 // ---------- Toast ----------
 function toast(msg, type) {
+  if (!msg) return;   // galat 'basi' (pengguna sudah pindah halaman) tidak ditampilkan
   const d = document.createElement('div'); d.className = 'toast ' + (type || ''); d.textContent = msg;
   $('#toasts').appendChild(d); setTimeout(() => d.remove(), type === 'error' ? 5500 : 3200);
 }
@@ -72,7 +73,7 @@ ACT.cfNo = el => { const o = el.closest('.overlay'); o.__res(false); Modal.close
 async function busy(btn, fn) {
   if (btn) { btn.disabled = true; btn.dataset.t = btn.innerHTML; btn.innerHTML = '<span class="spin"></span> Memproses…'; }
   try { return await fn(); }
-  catch (e) { if (e.code !== 'AUTH') toast(e.message || 'Terjadi kesalahan', 'error'); return undefined; }
+  catch (e) { if (e.code !== 'AUTH' && !e.stale) toast(e.message || 'Terjadi kesalahan', 'error'); return undefined; }
   finally { if (btn && btn.isConnected) { btn.disabled = false; btn.innerHTML = btn.dataset.t; } }
 }
 
@@ -116,7 +117,7 @@ const Foto = {
     const need = [...new Set($$('[data-foto]', root).map(e => e.dataset.foto).filter(n => !(n in this.m)))];
     for (let i = 0; i < need.length; i += 12) {
       const part = need.slice(i, i + 12);
-      try { const r = await Api.post('getFoto', { nisList: part }); part.forEach(n => { this.m[n] = r[n] || ''; }); }
+      try { const r = await Api.post('getFoto', { nisList: part }, { keep: true }); part.forEach(n => { this.m[n] = r[n] || ''; }); }
       catch (e) { part.forEach(n => { this.m[n] = ''; }); }
       this.paint(root);
     }
@@ -341,3 +342,6 @@ async function bukuSppPdf(nis) {
   doc.save('Buku-SPP-' + s.nis + '-' + s.nama.replace(/[^A-Za-z0-9]+/g, '_') + '.pdf');
 }
 ACT.bukuSpp = el => busy(el, () => bukuSppPdf(el.dataset.nis));
+
+// Penolakan janji dari halaman lama (pengguna sudah berpindah menu) bukan galat bagi pengguna
+window.addEventListener('unhandledrejection', e => { if (e.reason && e.reason.stale) e.preventDefault(); });

@@ -1,8 +1,8 @@
-/* Service worker SIBYAN v3.4.0
+/* Service worker SIBYAN v3.5.0
  * Tujuan: aplikasi bisa dipasang (PWA) TANPA menahan versi lama.
  * Strategi: jaringan dulu (selalu cek pembaruan ke server), cache hanya sebagai cadangan saat offline.
  * Data (Google Apps Script) dan pustaka CDN tidak pernah dicegat. */
-const VERSI = '3.4.0';
+const VERSI = '3.5.0';
 const CACHE = 'sibyan-' + VERSI;
 self.addEventListener('install', () => { self.skipWaiting(); });
 self.addEventListener('activate', e => {
